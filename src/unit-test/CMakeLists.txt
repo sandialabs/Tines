@@ -1,0 +1,11 @@
+#
+# test
+#
+ADD_EXECUTABLE(tines-test.x Tines_Test_Driver.cpp)
+TARGET_LINK_LIBRARIES(tines-test.x ${TINES_LINK_LIBRARIES})
+
+INSTALL(TARGETS tines-test.x
+        PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/${TINES_INSTALL_TEST_PATH}")
+
+ADD_TEST(TinesTest tines-test.x)

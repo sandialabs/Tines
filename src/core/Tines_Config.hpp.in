@@ -1,0 +1,33 @@
+#ifndef __TINES_CONFIG_H__
+#define __TINES_CONFIG_H__
+
+/// tines control
+#cmakedefine TINES_ENABLE_VERBOSE
+#cmakedefine TINES_ENABLE_DEBUG
+#cmakedefine TINES_ENABLE_NEWTON_WRMS
+#cmakedefine TINES_ENABLE_TRBDF2_WRMS
+
+/// required libraries
+#cmakedefine TINES_ENABLE_TPL_KOKKOS
+
+/// optional libraries
+#cmakedefine TINES_ENABLE_TPL_OPENBLAS
+#cmakedefine TINES_ENABLE_TPL_OPENBLAS_CBLAS_HEADER
+#cmakedefine TINES_ENABLE_TPL_LAPACKE
+#cmakedefine TINES_ENABLE_TPL_MKL
+
+/// cblas
+#if defined(TINES_ENABLE_TPL_MKL) | defined(TINES_ENABLE_TPL_OPENBLAS)
+#define TINES_ENABLE_TPL_CBLAS_ON_HOST
+#else
+#undef TINES_ENABLE_TPL_CBLAS_ON_HOST
+#endif
+
+#if defined(TINES_ENABLE_TPL_MKL) | defined(TINES_ENABLE_TPL_LAPACKE)
+#define TINES_ENABLE_TPL_LAPACKE_ON_HOST
+#else
+#undef TINES_ENABLE_TPL_LAPACKE_ON_HOST
+#endif
+
+
+#endif

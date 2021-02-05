@@ -1,0 +1,125 @@
+#include "Tines.hpp"
+
+int main(int argc, char **argv) {
+  Kokkos::initialize(argc, argv);
+  {
+    using real_type = double;
+
+    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
+    using host_memory_space = Kokkos::HostSpace;
+    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
+
+    using ats = Tines::ats<real_type>;
+    using Side = Tines::Side;
+    using Trans = Tines::Trans;
+    using Uplo = Tines::Uplo;
+    using Diag = Tines::Diag;
+
+    std::string filename;
+    int m = 10;
+    Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> A("A", m,
+                                                                        m);
+    if (argc == 2) {
+      filename = argv[1];
+      Tines::readMatrix(filename, A);
+      m = A.extent(0);
+    }
+
+    Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> Q("Q", m,
+                                                                        m);
+    Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> QQ("QQ",
+                                                                         m, m);
+    Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> R("R", m,
+                                                                        m);
+    Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> B("B", m,
+                                                                        m);
+
+    Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> t("t", m);
+    Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> w("w", m);
+
+    const real_type one(1), zero(0);
+    const auto member = Tines::HostSerialTeamMember();
+
+    if (filename.empty()) {
+      Kokkos::Random_XorShift64_Pool<host_device_type> random(13718);
+      Kokkos::fill_random(A, random, real_type(1.0));
+    }
+
+    bool is_valid(false);
+    Tines::CheckNanInf::invoke(member, A, is_valid);
+    std::cout << "Random matrix created "
+              << (is_valid ? "is valid" : "is NOT valid") << "\n\n";
+
+    Tines::Copy::invoke(member, A, B);
+    Tines::showMatrix("A (before Hess)", A);
+
+    /// A = Q H Q^H
+    Tines::Hessenberg::invoke(member, A, t, w);
+    Tines::showMatrix("A (after Hessenberg)", A);
+    Tines::showVector("t (after Hessenberg)", t);
+
+    /// Q
+    Tines::HessenbergFormQ::invoke(member, A, t, Q, w);
+    Tines::showMatrix("Q", Q);
+
+    /// QQ = Q Q'
+    Tines::Gemm<Trans::NoTranspose, Trans::Transpose>::invoke(member, one, Q, Q,
+                                                              zero, QQ);
+    Tines::showMatrix("Q Q'", QQ);
+    {
+      real_type err(0);
+      for (int i = 0; i < m; ++i)
+        for (int j = 0; j < m; ++j) {
+          const real_type diff = ats::abs(QQ(i, j) - (i == j ? one : zero));
+          err += diff * diff;
+        }
+      const real_type rel_err = ats::sqrt(err / (m));
+
+      const real_type margin = 100, threshold = ats::epsilon() * margin;
+      if (rel_err < threshold) {
+        std::cout << "PASS Hessenberg Q Orthogonality " << rel_err << "\n\n";
+      } else {
+        std::cout << "FAIL Hessenberg Q Orthogonality " << rel_err << "\n\n";
+      }
+    }
+
+    /// H
+    Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, A);
+    Tines::showMatrix("H", A);
+    Tines::writeMatrix("H.txt", A);
+
+    /// B = A - QHQ^H
+    real_type norm(0);
+    {
+      for (int i = 0; i < m; ++i)
+        for (int j = 0; j < m; ++j) {
+          const real_type val = ats::abs(B(i, j));
+          norm += val * val;
+        }
+    }
+    Tines::Gemm<Trans::NoTranspose, Trans::NoTranspose>::invoke(member, one, Q,
+                                                                A, zero, QQ);
+    Tines::Gemm<Trans::NoTranspose, Trans::Transpose>::invoke(member, -one, QQ,
+                                                              Q, one, B);
+    Tines::showMatrix("B (A-QHQ^H)", B);
+
+    {
+      real_type err(0);
+      for (int i = 0; i < m; ++i)
+        for (int j = 0; j < m; ++j) {
+          const real_type diff = ats::abs(B(i, j));
+          err += diff * diff;
+        }
+      const real_type rel_err = ats::sqrt(err / (norm));
+
+      const real_type margin = 100, threshold = ats::epsilon() * margin;
+      if (rel_err < threshold) {
+        std::cout << "PASS Hessenberg Decompose " << rel_err << "\n\n";
+      } else {
+        std::cout << "FAIL Hessenberg Decompose " << rel_err << "\n\n";
+      }
+    }
+  }
+  Kokkos::finalize();
+  return 0;
+}

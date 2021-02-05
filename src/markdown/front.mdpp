@@ -1,0 +1,18 @@
+# TINES - Time Integration, Newton and Eigen Solver
+
+!TOC
+
+!INCLUDE "intro.md", 1
+!INCLUDE "build.md", 1
+!INCLUDE "problem.md", 1
+!INCLUDE "numerical-jacobian.md", 1
+!INCLUDE "sacado-jacobian.md", 1
+!INCLUDE "newton.md", 1
+!INCLUDE "time-integrator-trbdf2.md", 1
+!INCLUDE "eigensolver.md", 1
+
+## Acknowledgement
+
+This work is supported as part of the Computational Chemical Sciences Program funded by the U.S. Department of Energy, Office of Science, Basic Energy Sciences, Chemical Sciences, Geosciences and Biosciences Division.
+
+Award number: 0000232253

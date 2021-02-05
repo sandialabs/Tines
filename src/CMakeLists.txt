@@ -1,0 +1,167 @@
+# Kokkos requires 3.3
+CMAKE_MINIMUM_REQUIRED(VERSION 3.3)
+
+# Project TINES
+PROJECT(TINES)
+
+# CMAKE setup
+SET(CMAKE_VERBOSE_MAKEFILE ON) # see all output
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
+
+# Define BUILD_TESTING in cmake
+INCLUDE(CTest)
+
+# Installation
+IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  SET(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}" CACHE PATH "FOO install prefix" FORCE)
+ENDIF()
+
+SET(TINES_INSTALL_LIB_PATH     lib    )
+SET(TINES_INSTALL_INCLUDE_PATH include/tines)
+SET(TINES_INSTALL_TEST_PATH    unit-test)
+SET(TINES_INSTALL_EXAMPLE_PATH example)
+
+#
+# Options : use TINES prefix
+#
+OPTION(TINES_ENABLE_EXAMPLE "Flag to enable unit examples" OFF)
+OPTION(TINES_ENABLE_TEST "Flag to enable unit tests" OFF)
+OPTION(TINES_ENABLE_VERBOSE "Flag to enable TINES verbose flag" OFF)
+OPTION(TINES_ENABLE_DEBUG "Flag to enable TINES debug flag" OFF)
+OPTION(TINES_ENABLE_TRBDF2_WRMS "Flag to enable TINES TrBDF2 to use weighted rms norm for error estimation" ON)
+OPTION(TINES_ENABLE_NEWTON_WRMS "Flag to enable TINES TrBDF2 to use weighted rms norm for error estimation" ON)
+
+# use intel compiler and -mkl flag 
+OPTION(TINES_ENABLE_MKL "Flag to enable MKL" OFF)
+
+OPTION(KOKKOS_INSTALL_PATH "Path to Kokkos installation")
+OPTION(LAPACKE_INSTALL_PATH "Path to LAPACKE installation")
+OPTION(OPENBLAS_INSTALL_PATH "Path to OpenBLAS installation")
+OPTION(GTEST_INSTALL_PATH "Path to gtest installation")
+
+INCLUDE_DIRECTORIES(${TINES_BINARY_DIR})
+
+# TINES link libraries for tests
+SET(TINES_LINK_LIBRARIES tines)
+
+#
+# Kokkos
+#
+IF (KOKKOS_INSTALL_PATH)
+  MESSAGE(STATUS "TINES uses Kokkos installed at ${KOKKOS_INSTALL_PATH}")
+  FIND_PACKAGE(Kokkos REQUIRED)
+  SET(TINES_INTERNAL_KOKKOS_TARGET "Kokkos::kokkos")
+  SET(TINES_ENABLE_TPL_KOKKOS ON CACHE BOOL "Enable Kokkos")
+  LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_KOKKOS_TARGET})
+ELSE()
+  MESSAGE(FATAL_ERROR "-- Kokkos is required library but KOKKOS_INSTALL_PATH is not provided")
+ENDIF()
+
+
+#
+# gtest
+#
+IF (TINES_ENABLE_TEST)
+  IF (GTEST_INSTALL_PATH)
+    # Interface installed gtest
+    MESSAGE("-- TINES uses gtest installed at ${GTEST_INSTALL_PATH}")
+    FIND_PACKAGE(Gtest REQUIRED)
+    SET(TINES_INTERNAL_GTEST_TARGET "GTest::gtest_main")
+  ELSE()
+    MESSAGE(FATAL_ERROR "-- TEST is enabled but GTEST_INSTALL_PATH is not provided")    
+  ENDIF()
+  LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_GTEST_TARGET})
+ENDIF()
+
+#
+# OpenBLAS
+#
+IF (OPENBLAS_INSTALL_PATH)
+  FIND_PACKAGE (OpenBLAS)
+  IF (OPENBLAS_FOUND)
+    SET(TINES_ENABLE_TPL_OPENBLAS ON CACHE BOOL "Enable OpenBLAS")
+    SET(TINES_INTERNAL_OPENBLAS_TARGET "openblas")
+    MESSAGE("-- OpenBLAS is found at ${OPENBLAS_INSTALL_PATH}")
+    IF (OPENBLAS_FOUND_CBLAS_HEADER)
+      MESSAGE("-- OpenBLAS includes  CBLAS")
+      SET(TINES_ENABLE_TPL_OPENBLAS_CBLAS_HEADER ON CACHE BOOL "Enable OpenBLAS from MacPort")
+    ENDIF()
+    LIST(APPEND TINES_LINK_LIBRARIES openblas)
+    IF (LAPACKE_FOUND)
+       MESSAGE("-- OpenBLAS includes LAPACKE")
+      SET(TINES_ENABLE_TPL_LAPACKE ON CACHE BOOL "Enable LAPACKE from OpenBlas")
+    ENDIF()
+  ELSE()
+    MESSAGE(FATAL_ERROR "-- OpenBLAS is not found at ${OPENBLAS_INSTALL_PATH}")
+  ENDIF()
+ENDIF()
+
+#
+# LAPACKE
+#
+IF (LAPACKE_INSTALL_PATH)
+  IF (NOT TINES_ENABLE_TPL_LAPACKE)
+    FIND_PACKAGE (LAPACKE)
+    IF (LAPACKE_FOUND)
+      MESSAGE("-- LAPACKE is found at ${LAPACKE_INSTALL_PATH}")    
+      SET(TINES_ENABLE_TPL_LAPACKE ON CACHE BOOL "Enable LAPACKE")
+      SET(TINES_INTERNAL_LAPACKE_TARGET "lapacke")
+      SET(TINES_INTERNAL_LAPACK_TARGET "lapack")
+      LIST(APPEND TINES_LINK_LIBRARIES lapacke)
+      LIST(APPEND TINES_LINK_LIBRARIES lapack)
+    ELSE()
+      MESSAGE(FATAL_ERROR "-- LAPACKE is not found at ${LAPACKE_INSTALL_PATH}")
+    ENDIF()
+  ELSE()
+    MESSAGE(WARNING "-- LAPACKE is enabled from MacPort OpenBlas")
+  ENDIF()
+ENDIF()
+
+#
+# MKL
+#
+IF (TINES_ENABLE_MKL)
+  IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    SET(TINES_ENABLE_TPL_MKL ON CACHE BOOL "Enable MKL")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -mkl")
+    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -mkl")
+    MESSAGE("-- MKL is enabled (use intel compiler supporting -mkl)")
+  ELSE()
+    MESSAGE(FATAL_ERROR "-- MKL is not enabled (use intel compiler supporting -mkl)")
+  ENDIF()
+ENDIF()
+
+#
+# Linking libraries used in example and test
+#
+IF (NOT (TINES_ENABLE_TPL_MKL))
+  IF (NOT (TINES_ENABLE_TPL_LAPACKE AND TINES_ENABLE_TPL_OPENBLAS))
+    MESSAGE(FATAL_ERROR "-- There no dense linear algebra packages are detected")
+  ENDIF()
+ENDIF()
+
+MESSAGE("-- TINES_LINK_LIBRARIES = ${TINES_LINK_LIBRARIES}")
+
+#
+# Define configure-related preprocessor macros
+#
+CONFIGURE_FILE (
+  ${TINES_SOURCE_DIR}/core/Tines_Config.hpp.in
+  ${TINES_BINARY_DIR}/Tines_Config.hpp
+  )
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/Tines_Config.hpp
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/${TINES_INSTALL_INCLUDE_PATH}")
+
+#
+# Process subdirectories
+#
+
+ADD_SUBDIRECTORY (core)
+IF (TINES_ENABLE_TEST AND TINES_ENABLE_EXAMPLE)
+  ADD_SUBDIRECTORY (unit-test)
+ENDIF()
+IF (TINES_ENABLE_EXAMPLE OR TINES_ENABLE_TEST)
+  ADD_SUBDIRECTORY (example)
+ENDIF()
+
+

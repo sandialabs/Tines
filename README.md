@@ -145,7 +145,7 @@ It its worth for noting that (1) the serial execution space is enabled for Kokko
 Compiling TINES follows Kokkos configuration settings, also available at ``${KOKKOS_INSTALL_PATH}``. The OpenBLAS and LAPACKE libraries are required on the host device. These provide optimized dense linear algebra tools. When an Intel compiler is available, one can replace these libraries with Intel MKL by adding an option ``TINES_ENABLE_MKL=ON``. On Mac OSX, we use the OpenBLAS library managed by **macports**. This version of the OpenBLAS has different header names and we need to distinguish this version of the code from others which are typically used in Linux distributions. To discern the two version of the code, cmake looks for ``cblas_openblas.h`` to tell that the installed version is from MacPorts. This mechanism can be broken if MacPorts' OpenBLAS is changed later. The MacPorts OpenBLAS version also include LAPACKE interface and one can remove ``LAPACKE_INSTALL_PATH`` from the configure script. SACADO library is a header only library and it is included in the TINES distributions.
 
 ```
-cd ${KOKKOS_BUILD_PATH}
+cd ${TINES_BUILD_PATH}
 cmake \
     -D CMAKE_INSTALL_PREFIX=${TINES_INSTALL_PATH} \
     -D CMAKE_CXX_COMPILER="${CXX}" \

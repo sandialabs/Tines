@@ -1,23 +1,3 @@
-/*----------------------------------------------------------------------------------
-Tines - Time Integrator, Newton and Eigen Solver -  version 1.0
-Copyright (2021) NTESS
-https://github.com/sandialabs/Tines
-
-Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS). 
-Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains 
-certain rights in this software.
-
-This file is part of Tines. Tines is open-source software: you can redistribute it
-and/or modify it under the terms of BSD 2-Clause License
-(https://opensource.org/licenses/BSD-2-Clause). A copy of the license is also
-provided under the main directory
-Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
-	   Oscar Diaz-Ibarra at <odiazib@sandia.gov>, or
-	   Cosmin Safta at <csafta@sandia.gov>, or
-	   Habib Najm at <hnnajm@sandia.gov>
-
-Sandia National Laboratories, New Mexico, USA
-----------------------------------------------------------------------------------*/
 #ifndef __TCHEM_IMPL_TIME_INTEGRATOR_TRBDF2_HPP__
 #define __TCHEM_IMPL_TIME_INTEGRATOR_TRBDF2_HPP__
 
@@ -94,6 +74,11 @@ namespace Tines {
       trbdf2_part1_type trbdf_part1;
       trbdf2_part2_type trbdf_part2;
 
+      /// to compute workspace correctly the problem information should be given first
+      /// assign the problem to trbdf
+      trbdf_part1._problem = problem;
+      trbdf_part2._problem = problem;
+      
       /// workspace
       auto wptr = work.data();
 
@@ -133,10 +118,6 @@ namespace Tines {
 
       assert(workspace_used <= workspace_extent &&
              "Error: workspace is used more than allocated");
-
-      /// assign the problem to trbdf
-      trbdf_part1._problem = problem;
-      trbdf_part2._problem = problem;
 
       /// initial conditions
       Kokkos::parallel_for(Kokkos::TeamVectorRange(member, m),

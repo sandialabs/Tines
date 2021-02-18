@@ -163,7 +163,7 @@ namespace Tines {
     using real_type_1d_view_type = value_type_1d_view<real_type, device_type>;
     using real_type_2d_view_type = value_type_2d_view<real_type, device_type>;
 
-    using problem_type = ProblemType<real_type, device_type>;
+    using problem_type = ProblemType<value_type, device_type>;
 
     problem_type _problem;
 
@@ -262,7 +262,7 @@ namespace Tines {
     using real_type_1d_view_type = value_type_1d_view<real_type, device_type>;
     using real_type_2d_view_type = value_type_2d_view<real_type, device_type>;
 
-    using problem_type = ProblemType<real_type, device_type>;
+    using problem_type = ProblemType<value_type, device_type>;
 
     problem_type _problem;
 

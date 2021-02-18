@@ -40,7 +40,7 @@ namespace Tines {
               template <typename, typename> class ProblemType>
     KOKKOS_INLINE_FUNCTION static void
     invoke(const MemberType &member,
-           const ProblemType<real_type, device_type> &problem,
+           const ProblemType<value_type, device_type> &problem,
            const real_type &fac_min, const real_type &fac_max,
            const real_type_1d_view_type &fac, const real_type_1d_view_type &x,
            const real_type_1d_view_type &f_0, const real_type_1d_view_type &f_h,
@@ -155,7 +155,7 @@ namespace Tines {
     /// m - # of equations of the problem
     template <template <typename, typename> class ProblemType>
     KOKKOS_INLINE_FUNCTION static void
-    workspace(const ProblemType<real_type, device_type> &problem, int &wlen) {
+    workspace(const ProblemType<value_type, device_type> &problem, int &wlen) {
       const int m = problem.getNumberOfEquations();
       wlen = 2 * m;
     }
@@ -164,7 +164,7 @@ namespace Tines {
               template <typename, typename> class ProblemType>
     KOKKOS_INLINE_FUNCTION static void
     invoke(const MemberType &member,
-           const ProblemType<real_type, device_type> &problem,
+           const ProblemType<value_type, device_type> &problem,
            const real_type &fac_min, const real_type &fac_max,
            const real_type_1d_view_type &fac, const real_type_1d_view_type &x,
            const real_type_2d_view_type &J,

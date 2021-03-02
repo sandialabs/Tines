@@ -40,7 +40,7 @@ Sandia National Laboratories, New Mexico, USA
 #include "Kokkos_Core.hpp"
 #include "Kokkos_Random.hpp"
 #include "impl/Kokkos_Timer.hpp"
-
+#include "Sacado.hpp"
 #include "Tines_ArithTraits.hpp"
 #include "Tines_Config.hpp"
 
@@ -128,6 +128,72 @@ namespace Tines {
   ///
   template <typename T> using ats = ArithTraits<T>;
 
+  ///
+  /// create view
+  ///
+  template <typename ValueType, typename DeviceType> struct ViewFactory {
+    using value_type = ValueType;
+    using device_type = DeviceType;
+
+    using value_type_0d_view_type = value_type_0d_view<value_type,device_type>;
+    KOKKOS_INLINE_FUNCTION
+    static value_type_0d_view_type create_0d_view(value_type * data, const int dummy = 0) { return value_type_0d_view_type(data); }        
+    static value_type_0d_view_type create_0d_view(const std::string& name, const int dummy = 0) { return value_type_0d_view_type(name); }
+
+    using value_type_1d_view_type = value_type_1d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_1d_view_type create_1d_view(value_type * data, const int m0, const int dummy = 0) { return value_type_1d_view_type(data, m0); }        
+    static value_type_1d_view_type create_1d_view(const std::string& name, const int m0, const int dummy = 0) { return value_type_1d_view_type(name, m0); }
+
+    using value_type_2d_view_type = value_type_2d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_2d_view_type create_2d_view(value_type * data, const int m0, const int m1, const int dummy = 0) { return value_type_2d_view_type(data, m0, m1); }    
+    static value_type_2d_view_type create_2d_view(const std::string& name, const int m0, const int m1, const int dummy = 0) { return value_type_2d_view_type(name, m0, m1); }
+
+    using value_type_3d_view_type = value_type_3d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_3d_view_type create_3d_view(value_type * data, const int m0, const int m1, const int m2, const int dummy = 0) { return value_type_3d_view_type(data, m0, m1, m2); }        
+    static value_type_3d_view_type create_3d_view(const std::string& name, const int m0, const int m1, const int m2, const int dummy = 0) { return value_type_3d_view_type(name, m0, m1, m2); }
+
+    using value_type_4d_view_type = value_type_4d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_4d_view_type create_4d_view(value_type * data, const int m0, const int m1, const int m2, const int m3, const int dummy = 0) { return value_type_4d_view_type(data, m0, m1, m2, m3); }    
+    static value_type_4d_view_type create_4d_view(const std::string& name, const int m0, const int m1, const int m2, const int m3, const int dummy = 0) { return value_type_4d_view_type(name, m0, m1, m2, m3); }
+  };
+
+  template <typename ValueType, int N, typename DeviceType> struct ViewFactory<Sacado::Fad::SLFad<ValueType,N>,DeviceType> {
+    using scalar_type = ValueType;
+    using value_type = Sacado::Fad::SLFad<scalar_type,N>;
+    using device_type = DeviceType;
+
+    using value_type_0d_view_type = value_type_0d_view<value_type,device_type>;
+    KOKKOS_INLINE_FUNCTION
+    static value_type_0d_view_type create_0d_view(scalar_type * data, const int fad_dim) { return value_type_0d_view_type(data, fad_dim); }        
+    static value_type_0d_view_type create_0d_view(const std::string& name, const int fad_dim) { return value_type_0d_view_type(name, fad_dim); }
+
+    using value_type_1d_view_type = value_type_1d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_1d_view_type create_1d_view(scalar_type * data, const int m0, const int fad_dim) { return value_type_1d_view_type(data, m0, fad_dim); }        
+    static value_type_1d_view_type create_1d_view(const std::string& name, const int m0, const int fad_dim) { return value_type_1d_view_type(name, m0, fad_dim); }
+
+    using value_type_2d_view_type = value_type_2d_view<value_type,device_type>;
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_2d_view_type create_2d_view(scalar_type * data, const int m0, const int m1, const int fad_dim) { return value_type_2d_view_type(data, m0, m1, fad_dim); }    
+    static value_type_2d_view_type create_2d_view(const std::string& name, const int m0, const int m1, const int fad_dim) { return value_type_2d_view_type(name, m0, m1, fad_dim); }
+
+    using value_type_3d_view_type = value_type_3d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_3d_view_type create_3d_view(scalar_type * data, const int m0, const int m1, const int m2, const int fad_dim) { return value_type_3d_view_type(data, m0, m1, m2, fad_dim); }        
+    static value_type_3d_view_type create_3d_view(const std::string& name, const int m0, const int m1, const int m2, const int fad_dim) { return value_type_3d_view_type(name, m0, m1, m2, fad_dim); }
+
+    using value_type_4d_view_type = value_type_4d_view<value_type,device_type>;    
+    KOKKOS_INLINE_FUNCTION    
+    static value_type_4d_view_type create_4d_view(scalar_type * data, const int m0, const int m1, const int m2, const int m3, const int fad_dim) { return value_type_4d_view_type(data, m0, m1, m2, m3, fad_dim); }    
+    static value_type_4d_view_type create_4d_view(const std::string& name, const int m0, const int m1, const int m2, const int m3, const int fad_dim) { return value_type_4d_view_type(name, m0, m1, m2, m3, fad_dim); }
+  };
+
+  
+  
   ///
   /// to avoid conflict when using double, std::complex<double>,
   /// Kokkos::complex<double> together

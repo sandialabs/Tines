@@ -124,11 +124,15 @@ namespace Tines {
     }
 
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoStorageCapacity(value_type &x) {
-      return 0;
+    sacadoStorageCapacity() {
+      return 1;
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoDerivativeDimension(value_type &x) {
+    sacadoStorageDimension(const value_type &x) {
+      return 0;
+    }    
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoDerivativeDimension(const value_type &x) {
       return 0;
     }
   };
@@ -229,11 +233,15 @@ namespace Tines {
     }
 
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoStorageCapacity(value_type &x) {
-      return 0;
+    sacadoStorageCapacity() {
+      return 1;
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoDerivativeDimension(value_type &x) {
+    sacadoStorageDimension(const value_type &x) {
+      return 0;
+    }        
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoDerivativeDimension(const value_type &x) {
       return 0;
     }
   };
@@ -300,11 +308,15 @@ namespace Tines {
     }
 
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoStorageCapacity(value_type &x) {
+    sacadoStorageCapacity() {
+      return 1;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageDimension(value_type &x) {
       return 0;
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoDerivativeDimension(value_type &x) {
+    sacadoDerivativeDimension(const value_type &x) {
       return 0;
     }
   };
@@ -355,8 +367,10 @@ namespace Tines {
     static inline int base() { return ats::base(); }
     static inline magnitude_type prec() { return ats::prec(); }
 
-    static inline int sacadoStorageCapacity(value_type &x) { return 0; }
-    static inline int sacadoDerivativeDimension(value_type &x) { return 0; }
+
+    static inline int sacadoStorageCapacity() {  return 1; }    
+    static inline int sacadoStorageDimension(value_type &x) { return 0; }
+    static inline int sacadoDerivativeDimension(const value_type &x) { return 0; }
   };
 
   /// int specialization
@@ -437,11 +451,15 @@ namespace Tines {
     static KOKKOS_FORCEINLINE_FUNCTION magnitude_type sfmin() { return 0; }
 
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoStorageCapacity(value_type &x) {
+    sacadoStorageCapacity() {
+      return 1;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageDimension(value_type &x) {
       return 0;
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoDerivativeDimension(value_type &x) {
+    sacadoDerivativeDimension(const value_type &x) {
       return 0;
     }
   };
@@ -542,11 +560,15 @@ namespace Tines {
     }
 
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoStorageCapacity(value_type &x) {
+    sacadoStorageCapacity() {
       return FadDimUpperBound;
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
-    sacadoDerivativeDimension(value_type &x) {
+    sacadoStorageDimension(const value_type &x) {
+      return x.size()+1;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoDerivativeDimension(const value_type &x) {
       return x.size();
     }
   };

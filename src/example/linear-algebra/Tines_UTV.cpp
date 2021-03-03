@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
                                                                           m, m);
       Kokkos::View<int *, Kokkos::LayoutRight, host_device_type> p("p", m);
       Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> w("w",
-                                                                         3 * m);
+                                                                         4 * m);
 
       Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> x("x",
                                                                          m);

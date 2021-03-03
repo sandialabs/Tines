@@ -23,6 +23,7 @@ Sandia National Laboratories, New Mexico, USA
 int main(int argc, char **argv) {
   Kokkos::initialize(argc, argv);
   {
+#if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
     using real_type = double;
 
     using host_exec_space = Kokkos::DefaultHostExecutionSpace;
@@ -128,6 +129,9 @@ int main(int argc, char **argv) {
     } else {
       printf("Schur does not converge at a row %d\n", -r_val);
     }
+#else
+    printf("LAPACKE is not enabled and this test is not available\n");
+#endif
   }
   Kokkos::finalize();
   return 0;

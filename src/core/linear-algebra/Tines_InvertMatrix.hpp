@@ -75,17 +75,14 @@ namespace Tines {
       int r_val(0);
       r_val = QR_Internal ::invoke(member, m, n, Aptr, as0, as1, tptr, 1, work);
       member.team_barrier();
-
       const value_type one(1), zero(0);
       value_type *Bptr = B.data();
       const int bs0 = B.stride(0), bs1 = B.stride(1);
       r_val = SetInternal ::invoke(member, m, n, one, zero, Bptr, bs0, bs1);
-
-      r_val = ApplyQ_LeftForwardInternal ::invoke(
+      r_val = ApplyQ_LeftBackwardInternal ::invoke(
         member, m, n, n, Aptr, as0, as1, tptr, 1, Bptr, bs0, bs1, work);
       r_val = TrsmInternalLeftUpper ::invoke(member, false, m, n, one, Aptr,
                                              as0, as1, Bptr, bs0, bs1);
-
       return r_val;
     }
 

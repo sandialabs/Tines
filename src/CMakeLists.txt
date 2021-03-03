@@ -136,7 +136,7 @@ ENDIF()
 #
 IF (NOT (TINES_ENABLE_TPL_MKL))
   IF (NOT (TINES_ENABLE_TPL_LAPACKE AND TINES_ENABLE_TPL_OPENBLAS))
-    MESSAGE(FATAL_ERROR "-- There no dense linear algebra packages are detected")
+    MESSAGE(WARNING "-- There no dense linear algebra packages are detected")
   ENDIF()
 ENDIF()
 

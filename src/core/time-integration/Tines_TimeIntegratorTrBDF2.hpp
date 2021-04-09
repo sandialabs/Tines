@@ -79,7 +79,7 @@ namespace Tines {
       int r_val(0);
 
       /// const values
-      const real_type zero(0), half(1 / 2), /*two(2), */ minus_one(-1);
+      const real_type zero(0), half(.5), /*two(2), */ minus_one(-1);
 
       /// early return
       if (dt_in < zero)

@@ -4,9 +4,11 @@ SET(TINES_EXAMPLE_SOURCES "")
 # Append examples that work for all device types
 LIST(APPEND TINES_EXAMPLE_SOURCES
   Tines_View.cpp
-  Tines_ToySacado.cpp
+  Tines_ToySacadoJacobian.cpp
+  Tines_ToySacadoHessian.cpp
   Tines_ToySacadoStdVector.cpp
   Tines_ToySacadoReducer.cpp
+  Tines_ToySacadoRayleighQuotient.cpp 
 )
 
 #

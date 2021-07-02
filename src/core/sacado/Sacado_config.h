@@ -30,6 +30,9 @@
 
 /* Define if want to build with kokkos-core enabled */
 #define HAVE_SACADO_KOKKOSCORE
+#if !defined(HAVE_SACADO_KOKKOSCORE)
+#define KOKKOS_INLINE_FUNCTION inline
+#endif
 
 /* Define if want to build with kokkos-containers enabled */
 #define HAVE_SACADO_KOKKOSCONTAINERS

@@ -1,11 +1,11 @@
 # your kokkos install directory
-KOKKOS_INSTALL_PATH=$(HOME)/Work/lib/kokkos/install/butter/release
+KOKKOS_INSTALL_PATH=$(HOME)/Work/lib/kokkos/install/coffee/release
 
-EXE = Tines_ToySacadoStdVector
+EXE = Tines_ToySacadoRayleighQuotient
 
 # CXX and CXX flags may need to be modified according to users compiler setting
 # openmp flag is required if kokkos openmp space is enalbed when kokkos is installed
-CXX = clang++-mp-9.0 
+CXX = clang++-mp-11
 CXXFLAGS = -std=c++14 -fopenmp
 
 CPPFLAGS = \

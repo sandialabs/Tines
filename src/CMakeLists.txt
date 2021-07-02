@@ -29,6 +29,7 @@ SET(TINES_INSTALL_EXAMPLE_PATH example)
 #
 # Options : use TINES prefix
 #
+OPTION(TINES_ENABLE_SHARED_BUILD "Flag to enable unit examples" OFF)
 OPTION(TINES_ENABLE_EXAMPLE "Flag to enable unit examples" OFF)
 OPTION(TINES_ENABLE_TEST "Flag to enable unit tests" OFF)
 OPTION(TINES_ENABLE_VERBOSE "Flag to enable TINES verbose flag" OFF)
@@ -43,6 +44,7 @@ OPTION(KOKKOS_INSTALL_PATH "Path to Kokkos installation")
 OPTION(LAPACKE_INSTALL_PATH "Path to LAPACKE installation")
 OPTION(OPENBLAS_INSTALL_PATH "Path to OpenBLAS installation")
 OPTION(GTEST_INSTALL_PATH "Path to gtest installation")
+OPTION(YAML_INSTALL_PATH "Path to YAML installation")
 
 INCLUDE_DIRECTORIES(${TINES_BINARY_DIR})
 
@@ -118,7 +120,7 @@ IF (LAPACKE_INSTALL_PATH)
       MESSAGE(FATAL_ERROR "-- LAPACKE is not found at ${LAPACKE_INSTALL_PATH}")
     ENDIF()
   ELSE()
-    MESSAGE(WARNING "-- LAPACKE is enabled from MacPort OpenBlas")
+    MESSAGE("-- LAPACKE is enabled from OpenBlas")
   ENDIF()
 ENDIF()
 
@@ -134,6 +136,20 @@ IF (TINES_ENABLE_MKL)
   ELSE()
     MESSAGE(FATAL_ERROR "-- MKL is not enabled (use intel compiler supporting -mkl)")
   ENDIF()
+ENDIF()
+
+#
+# YAML
+#
+IF (YAML_INSTALL_PATH)
+  # Interface installed YAML
+  MESSAGE("-- TINES uses YAML installed at ${YAML_INSTALL_PATH}")
+  FIND_PACKAGE(YAML)
+  SET(TINES_ENABLE_TPL_YAML ON CACHE BOOL "Enable YAML")  
+  SET(TINES_INTERNAL_YAML_TARGET "yaml")
+  LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_YAML_TARGET})  
+ELSE()
+  MESSAGE(WARNING "-- YAML_INSTALL_PATH is not provided")    
 ENDIF()
 
 #

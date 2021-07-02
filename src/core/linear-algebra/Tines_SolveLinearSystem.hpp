@@ -3,8 +3,8 @@ Tines - Time Integrator, Newton and Eigen Solver -  version 1.0
 Copyright (2021) NTESS
 https://github.com/sandialabs/Tines
 
-Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS). 
-Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains 
+Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains
 certain rights in this software.
 
 This file is part of Tines. Tines is open-source software: you can redistribute it
@@ -221,7 +221,7 @@ namespace Tines {
   defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
       if ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,
                         Kokkos::HostSpace>::value) &&
-          (A.stride(0) == 1 || A.stride(1) == 1) && false) {
+          (A.stride(0) == 1 || A.stride(1) == 1)) {
         Kokkos::single(Kokkos::PerTeam(member), [&]() {
           using value_type_a = typename AViewType::non_const_value_type;
           using value_type_x = typename XViewType::non_const_value_type;

@@ -38,6 +38,7 @@ Sandia National Laboratories, New Mexico, USA
 
 #include "Kokkos_Complex.hpp"
 #include "Kokkos_Core.hpp"
+#include "Kokkos_DualView.hpp"
 #include "Kokkos_Random.hpp"
 #include "impl/Kokkos_Timer.hpp"
 #include "Sacado.hpp"
@@ -123,6 +124,29 @@ namespace Tines {
   using value_type_4d_view =
     Kokkos::View<ValueType ****, Kokkos::LayoutRight, DeviceType>;
 
+  ///
+  /// Kokkos dual view
+  ///
+  template <typename ValueType, typename DeviceType>
+  using value_type_0d_dual_view =
+    Kokkos::DualView<ValueType, Kokkos::LayoutRight, DeviceType>;
+
+  template <typename ValueType, typename DeviceType>
+  using value_type_1d_dual_view =
+    Kokkos::DualView<ValueType *, Kokkos::LayoutRight, DeviceType>;
+
+  template <typename ValueType, typename DeviceType>
+  using value_type_2d_dual_view =
+    Kokkos::DualView<ValueType **, Kokkos::LayoutRight, DeviceType>;
+
+  template <typename ValueType, typename DeviceType>
+  using value_type_3d_dual_view =
+    Kokkos::DualView<ValueType ***, Kokkos::LayoutRight, DeviceType>;
+
+  template <typename ValueType, typename DeviceType>
+  using value_type_4d_dual_view =
+    Kokkos::DualView<ValueType ****, Kokkos::LayoutRight, DeviceType>;
+  
   ///
   /// arith traits
   ///

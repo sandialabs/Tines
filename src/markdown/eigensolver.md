@@ -1,24 +1,24 @@
-# Eigen Solver
+# Eigensolver
 
-A batched eigen solver is developed in TINES. We implemented the standard Francis double shifting algorithm using for unsymmetric real matrices that ranges from 10 to 1k. The code uses Kokkos team parallelism (a group of threads) for solving a single instance of the eigen problem where the batch parallelism is implemented with Kokkos parallel-for.
+A batched eigensolver is developed in TINES. We implemented the standard Francis double shifting algorithm using for unsymmetric real matrices that ranges from 10 to 1k. The code uses Kokkos team parallelism (a group of threads) for solving a single instance of the eigen problem where the batch parallelism is implemented with Kokkos parallel-for.
 
 The standard eigenvalue problem is described
 $$
 A v = \lambda v
 $$
-where $A$ is a matrix and the $\lambda$ and $v$ are corresponding eigen values and vectors. The QR algorithm is simple that it repeats 1) decompose $A = QR$ and 2) update $A = RQ$. To reduce the computational cost of the QR factorization, the QR algorithm can be improved using the Hessenberg reduction where the Householder transformation is applied to nonzero part of the Hessenberg form. To accelerate the convergence of eigen values, shifted matrix $A-\sigma I$ is used. The famous Francis QR algorithm consists of three phases: 1) reduction to Hessenberg form, 2) Schur decomposition using the double shifted QR iterations, and 3) solve for eigen vectors. As LAPACK is available for CPU platforms where the batch parallelism is implemented with OpenMP parallel-for, we focus on the GPU team-parallel implementation of the batch-parallel eigen solver.
+where $A$ is a matrix and the $\lambda$ and $v$ are corresponding eigenvalues and eigenvectors. The QR algorithm proceeds as follows: (1) decompose $A = QR$ and (2) update $A = RQ$. To reduce the computational cost of the QR factorization, the QR algorithm can be improved using the Hessenberg reduction where the Householder transformation is applied to nonzero part of the Hessenberg form. To accelerate the convergence of eigenvalues, the shifted form of matrix $A$ is used, $A-\sigma I$. The Francis QR algorithm consists of three phases: (1) reduction to Hessenberg form, (2) Schur decomposition using the double shifted QR iterations, and (3) solve for eigenvectors. As LAPACK is available for CPU platforms where the batch parallelism is implemented with OpenMP parallel-for, we focus on the GPU team-parallel implementation of the batch-parallel eigensolver.
 
 **Reduction to Upper Hessenberg Form**
 
-We perform a reduction to upper Hessenberg form by applying successive Householder transformation to a mtraix $A$ from both sides such that
+We perform a reduction to upper Hessenberg form by applying successive Householder transformation to a matrix $A$ from both sides such that
 $$
 A = Q H Q^T
 $$
-where $A$ is a $n\times n$ real matrix and $Q$ is an orthogonal matrix, and $H$ is upper Hessenberg form. The orthogonal matrix is represented as a product of Householder transformations
+where $A$ is a $n\times n$ real matrix, $Q$ is an orthogonal matrix, and $H$ is upper Hessenberg form. The orthogonal matrix is represented as a product of Householder transformations
 $$
 Q = H(0) H(1)... H(n-3)
 $$
-where $H(i) = I - \tau v v^T$ representing a Householder transformation that annihilates column entries of $(i+2:n,i)$. A basic algorithm described in the following pseudo code.
+where $H(i) = I - \tau v v^T$ representing a Householder transformation that annihilates column entries of $(i+2:n,i)$. This algorithm is described in the following pseudo code.
 ```
 /// [in/out] A - input matrix; upper Hessenberg form on exit
 /// [out] Q - orthogonal matrix Q = H(0) H(1) ... H(n-3)
@@ -44,7 +44,7 @@ for (int i=(n-3);i>=0;--i) {
   ApplyLeftHouseholder(u, Q(i+2:n,i+2:n));
 }
 ```
-The source of the parallelism in this code comes from The ``Apply{Left/Right}Householder`` where each entry of the part of $A$ can be concurrently updated by rank-one update. We also note that there is a blocked version for accumulating and applying the Householder vectors. However, we do not use the blocked version as it is difficult to gain efficiency from the blocked algorithm for small problem sizes.
+The source of the parallelism in this code comes from The ``Apply{Left/Right}Householder`` where each entry of the part of $A$ can be concurrently updated by a rank-one update. We also note that there is a blocked version for accumulating and applying the Householder vectors. However, we do not use the blocked version as it is difficult to gain efficiency from the blocked algorithm for small problem sizes.
 
 **Schur Decomposition**
 
@@ -52,19 +52,19 @@ After the Hessenberg reduction is performed, we compute its Schur decomposition 
 $$
 H = Z T Z^H
 $$
-where $T$ is quasi upper triangular matrix and $Z$ is an orthogoanl matrix of Schur vectors. Eigen values appear in any order along the diagonal entries of the Schur form. $1\times 1$ blocks represent real eigen values and $2\times 2$ blocks correspond to conjugate complex eigen values.
+where $T$ is quasi upper triangular matrix and $Z$ is an orthogonal matrix of Schur vectors. Eigenvalues appear in any order along the diagonal entries of the Schur form. $1\times 1$ blocks represent real eigenvalues and $2\times 2$ blocks correspond to conjugate complex eigenvalues.
 
 The Schur decomposition is computed using the Francis double shift QR algorithm. Here, we just sketch the algorithm to discuss its computational aspects. For details of the Francis algorithm, we recommend following books: G.H. Golub and C.F. van Loan, Matrix Computations and D.S. Watkins, Fundamentals of Matrix Computations.
-1. Set an active submatrix of the input Hessenberg matrix, H := H(1:p,1:p) and let $\sigma$ and $\bar{\sigma}$ are the complex pair of eigen values of the last diagonal $2\times 2$ block.
+1. Set an active submatrix of the input Hessenberg matrix, H := H(1:p,1:p) and let $\sigma$ and $\bar{\sigma}$ be the complex pair of eigenvalues of the last diagonal $2\times 2$ block.
 2. Perform two step QR iterations with a conjugate pair of shifts and form the real matrix $M = H^2 - sH + tI$ where $s = 2Re(\sigma)$ and $t = |\sigma|^2$.
 3. Update $H := Z^T H Z$ where $Z$ is the QR factorization of the matrix $M$.
-4. Repeat the step 2 and 3 until it converges to the real or complex eigen values.
+4. Repeat the step 2 and 3 until it converges to the real or complex eigenvalues.
 5. Adjust $p$ and reduce the submatrix size and repeat from 1.
-Using the implicit-Q theorem, the QR factorization of the step 3 can be computed by applying a sequence of inexpensive Householder transformations. This is called chasing bulge and the algorithm is essentially sequential, which makes it difficult to efficiently parallelize the QR iterations on GPUs. Thus, we choose to implement an hybrid algorithm computhing the Francis QR algorithm on CPU platforms.  
+Using the implicit-Q theorem, the QR factorization of step 3 can be computed by applying a sequence of inexpensive Householder transformations. This is called chasing bulge and the algorithm is essentially sequential, which makes it difficult to efficiently parallelize the QR iterations on GPUs. Thus, we choose to implement an hybrid algorithm computing the Francis QR algorithm on CPU platforms.  
 
 **Solve for Right Eigen Vectors**
 
-After the Schur form is computed, corresponding eigen vectors are computed by solving a singular system. For instance, consider following partitioned matrix with $i$th eigen value and eigen vector
+After the Schur decomposition is computed, the corresponding eigenvectors are computed by solving a singular system. For instance, consider the following partitioned matrix with $i$-th eigenvalue and eigenvector
 $$
 T - t_{ii} I =
 \left(
@@ -109,12 +109,12 @@ This reads the equation $T_{TL} v_T = 0$ as
 $$
 Su + rw = 0
 $$.
-By setting $w=1$, we can compute $u = -S^{-1} r$. As each eigen vector can be computed independently, a team of threads can be distributed for computing different eigen vectors. The eigen vectors of the given matrix $A$ are computed by multiplying the $Q$ and $Z$. 
+By setting $w=1$, we can compute $u = -S^{-1} r$. As each eigenvector can be computed independently, the work can be distributed to the team of threads available. The eigenvectors of the given matrix $A$ are computed by multiplying the $Q$ and $Z$.
 
 
-## Interface to Eigen Solver
+## Interface to Eigensolver
 
-A user may want to use our "device" level interface for solving many eigen problems in parallel. A device-level interface takes an input argument of ``exec_instance`` representing an execution space instance i.e., ``Kokkos::OpenMP()`` and ``Kokkos::Cuda()``.
+A user may want to use the "device" level interface for solving many eigenproblems in parallel. A device-level interface takes an input argument of ``exec_instance`` representing an execution space instance i.e., ``Kokkos::OpenMP()`` and ``Kokkos::Cuda()``.
 ```
 /// [in] exec_instance - Kokkos execution space instance (it can wrap CUDA stream)
 /// [in] A - array of input matrices

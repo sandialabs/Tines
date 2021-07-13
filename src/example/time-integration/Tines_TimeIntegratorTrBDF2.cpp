@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
       dt() = dtmin;
 
       /// newton
-      const int max_num_newton_iterations(10);
+      const int max_num_newton_iterations(10), jacobian_interval(3);
       tol_newton(0) = 1e-6;
       tol_newton(1) = 1e-5;
 
@@ -88,13 +88,18 @@ int main(int argc, char *argv[]) {
         tol_time(i, 1) = 1e-6;
       }
 
-      time_integrator_type::invoke(member, problem, max_num_newton_iterations,
+      Kokkos::Impl::Timer timer;
+      timer.reset();
+      time_integrator_type::invoke(member, problem, jacobian_interval,
+                                   max_num_newton_iterations,
                                    max_num_time_iterations, tol_newton,
                                    tol_time, dt(), dtmin, dtmax, tbeg, tend, u,
                                    t, dt, u, work);
-
+      Kokkos::fence();
+      double wall_time = timer.seconds();
       /// print
       {
+        printf("wall time %e\n", wall_time);
         const real_type err = problem.computeError(member, t(), u);
         printf("t %e, dt %e, u(0) %e, u(1) %e u(2) %e, err %e\n", t(), dt(),
                u(0), u(1), u(2), err);

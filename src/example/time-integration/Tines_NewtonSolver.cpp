@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     const int m = problem.getNumberOfEquations();
 
     const real_type atol(1e-6), rtol(1e-5);
-    const int max_iter = 100;
+    const int max_iter = 100, jacobian_interval = 5;
 
     real_type_1d_view_type x("x", m);
     real_type_1d_view_type dx("dx", m);
@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
 
     /// run the newton iterations
     const auto member = Tines::HostSerialTeamMember();
-    newton_solver_type::invoke(member, problem, atol, rtol, max_iter, x, dx, f,
+    newton_solver_type::invoke(member, problem, jacobian_interval,
+                               atol, rtol, max_iter, x, dx, f,
                                J, work, iter_count, converge);
     Tines::showVector("x_newton", x);
     {
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
           err += diff * diff;
         }
         const real_type rel_err = ats::sqrt(err / norm);
-        const real_type margin(100), threshold(ats::epsilon() * margin);
+        const real_type margin(10000), threshold(ats::epsilon() * margin);
         if (rel_err < threshold)
           std::cout << "PASS ";
         else

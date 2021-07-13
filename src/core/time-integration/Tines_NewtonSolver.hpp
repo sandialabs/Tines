@@ -107,41 +107,51 @@ namespace Tines {
     KOKKOS_INLINE_FUNCTION static void
     invoke(const MemberType &member,
            /// intput
-           const ProblemType &problem, const real_type &atol,
-           const real_type &rtol, const int &max_iter,
+           const ProblemType &problem,
+           const int &jacobian_interval,
+           const real_type &atol,
+           const real_type &rtol,
+           const int &max_iter,
            /// input/output
            const real_type_1d_view_type &x,
            /// workspace
            const real_type_1d_view_type &dx, const real_type_1d_view_type &f,
            const real_type_2d_view_type &J,
            const real_type_1d_view_type &work, // workspace
-                                               /// output
+           /// output
            /* */ int &iter_count,
            /* */ int &converge) {
+      const real_type zero(0);
+      const bool do_not_check_converge = (atol < zero && rtol < zero);
+      const int jacobian_interval_local = (jacobian_interval <= 0 ? 1 : jacobian_interval);
       converge = false;
-
+      
       /// the problem is square
       const int m = problem.getNumberOfEquations();
       int wlen(0);
       workspace(m, wlen);
       assert(wlen <= int(work.extent(0)) &&
              "Error: given workspace is smaller than required");
-
-      bool is_valid(true);
-      int iter = 0;
+      
+      int iter(0), matrix_rank(0);
+      
       // real_type norm2_f0(0);
       problem.computeInitValues(member, x);
       for (; iter < max_iter && !converge; ++iter) {
-        problem.computeJacobian(member, x, J);
         problem.computeFunction(member, x, f);
-        /// sanity check this also needs cmake option
-        Tines::CheckNanInf::invoke(member, J, is_valid);
-
+        
+        const bool is_jacobian_new = (iter%jacobian_interval_local) == 0;
+        bool is_valid(true);
+        if (is_jacobian_new) {
+          problem.computeJacobian(member, x, J);        
+          /// sanity check this also needs cmake option
+          Tines::CheckNanInf::invoke(member, J, is_valid);
+        } 
+        
         if (is_valid) {
           /// solve the equation: dx = -J^{-1} f(x);
-          int matrix_rank(0);
           Tines::SolveLinearSystem ::invoke(member, J, dx, f, work,
-                                            matrix_rank);
+                                            matrix_rank, !is_jacobian_new);
 
 #if defined(TINES_ENABLE_NEWTON_WRMS)
           updateSolutionAndCheckConvergenceUsingWrmsNorm(member, atol, rtol, m,
@@ -150,6 +160,7 @@ namespace Tines {
           updateSolutionAndCheckConvergence(member, atol, rtol, m, x, dx, f,
                                             norm2_f0, converge);
 #endif
+          converge = do_not_check_converge ? false : converge;
         } else {
           printf("Error: J contains either Nan or Inf\n");
           converge = false;
@@ -157,6 +168,35 @@ namespace Tines {
       }
       /// record the final number of iterations
       iter_count = iter;
+      converge = do_not_check_converge ? true : converge;
+    }
+
+    template <typename MemberType, typename ProblemType>
+    KOKKOS_INLINE_FUNCTION static void
+    invoke(const MemberType &member,
+           /// intput
+           const ProblemType &problem,
+           const real_type &atol,
+           const real_type &rtol,
+           const int &max_iter,
+           /// input/output
+           const real_type_1d_view_type &x,
+           /// workspace
+           const real_type_1d_view_type &dx, const real_type_1d_view_type &f,
+           const real_type_2d_view_type &J,
+           const real_type_1d_view_type &work, // workspace
+           /// output
+           /* */ int &iter_count,
+           /* */ int &converge) {
+      const int jacobian_interval(1);
+      invoke(member,
+             problem,
+             jacobian_interval,
+             atol, rtol,
+             max_iter, 
+             x, dx, f, J, work,
+             iter_count,
+             converge);
     }
   };
 

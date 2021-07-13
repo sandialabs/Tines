@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 
       const int max_time_integration = 1000;
       const real_type atol_newton(1e-6), rtol_newton(1e-5);
-      const int max_iter(10);
+      const int max_iter(10), jacobian_interval(4);
 
       real_type t(0);
       for (int titer = 0; titer < max_time_integration && dt != zero; ++titer) {
@@ -123,8 +123,12 @@ int main(int argc, char *argv[]) {
           int iter_count(0), converge(0);
 
           /// solve the trapezoidal integration
-          newton_solver_type::invoke(member, trbdf_part1, atol_newton,
-                                     rtol_newton, max_iter, unr, dx, f, J, work,
+          newton_solver_type::invoke(member, trbdf_part1,
+                                     jacobian_interval,
+                                     atol_newton,
+                                     rtol_newton,
+                                     max_iter,
+                                     unr, dx, f, J, work,
                                      iter_count, converge);
           problem.computeFunction(member, unr, fnr);
 
@@ -148,8 +152,12 @@ int main(int argc, char *argv[]) {
           int iter_count(0), converge(0);
 
           /// solve the BDF2 integration
-          newton_solver_type::invoke(member, trbdf_part2, atol_newton,
-                                     rtol_newton, max_iter, u, dx, f, J, work,
+          newton_solver_type::invoke(member, trbdf_part2,
+                                     jacobian_interval,
+                                     atol_newton,
+                                     rtol_newton,
+                                     max_iter,
+                                     u, dx, f, J, work,
                                      iter_count, converge);
           problem.computeFunction(member, u, f);
 

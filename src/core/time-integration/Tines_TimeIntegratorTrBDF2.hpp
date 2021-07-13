@@ -55,7 +55,9 @@ namespace Tines {
       /// problem
       const ProblemType<value_type, device_type> &problem,
       /// input iteration and qoi index to store
-      const int &max_num_newton_iterations, const int &max_num_time_iterations,
+      const int &jacobian_interval,
+      const int &max_num_newton_iterations,
+      const int &max_num_time_iterations,
       const real_type_1d_view_type &tol_newton,
       const real_type_2d_view_type &tol_time,
       /// input time step and time range
@@ -162,8 +164,10 @@ namespace Tines {
 
               int newton_iteration_count(0);
               newton_solver_type::invoke(
-                member, trbdf_part1, tol_newton(0), tol_newton(1),
-                max_num_newton_iterations, unr, dx, f, J, work_newton,
+                member, trbdf_part1, jacobian_interval,
+                tol_newton(0), tol_newton(1),
+                max_num_newton_iterations,
+                unr, dx, f, J, work_newton,
                 newton_iteration_count, converge_part1);
 
               if (converge_part1) {
@@ -181,8 +185,10 @@ namespace Tines {
 
               int newton_iteration_count(0);
               newton_solver_type::invoke(
-                member, trbdf_part2, tol_newton(0), tol_newton(1),
-                max_num_newton_iterations, u, dx, f, J, work_newton,
+                member, trbdf_part2, jacobian_interval,
+                tol_newton(0), tol_newton(1),
+                max_num_newton_iterations,
+                u, dx, f, J, work_newton,
                 newton_iteration_count, converge_part2);
               if (converge_part2) {
                 problem.computeFunction(member, u, f);
@@ -253,6 +259,43 @@ namespace Tines {
       }
 
       return r_val;
+    }
+
+    template <typename MemberType,
+              template <typename, typename> class ProblemType>
+    KOKKOS_INLINE_FUNCTION static int invoke(
+      const MemberType &member,
+      /// problem
+      const ProblemType<value_type, device_type> &problem,
+      /// input iteration and qoi index to store
+      const int &max_num_newton_iterations,
+      const int &max_num_time_iterations,
+      const real_type_1d_view_type &tol_newton,
+      const real_type_2d_view_type &tol_time,
+      /// input time step and time range
+      const real_type &dt_in, const real_type &dt_min, const real_type &dt_max,
+      const real_type &t_beg, const real_type &t_end,
+      /// input (initial condition)
+      const real_type_1d_view_type &vals,
+      /// output (final output conditions)
+      const real_type_0d_view_type &t_out, const real_type_0d_view_type &dt_out,
+      const real_type_1d_view_type &vals_out,
+      /// workspace
+      const real_type_1d_view_type &work) {
+
+      const int jacobian_interval(1);
+      return invoke(member, problem,
+                    jacobian_interval,
+                    max_num_newton_iterations,
+                    max_num_time_iterations,
+                    tol_newton,
+                    tol_time,
+                    dt_in, dt_min, dt_max,
+                    t_beg, t_end,
+                    vals,
+                    t_out, dt_out,
+                    vals_out,
+                    work);
     }
   };
 

@@ -36,7 +36,8 @@ namespace Tines {
                                 double *A, const int as0, const int as1,
                                 double *X, const int xs0, const int xs1,
                                 double *B, const int bs0, const int bs1,
-                                double *W, const int wlen, int &matrix_rank);
+                                double *W, const int wlen, int &matrix_rank,
+                                const bool solve_only = false);
 
   /// Kokkos view interface
   struct SolveLinearSystem {
@@ -63,7 +64,7 @@ namespace Tines {
     KOKKOS_INLINE_FUNCTION static int
     device_invoke(const MemberType &member, const AViewType &A,
                   const XViewType &X, const BViewType &B, const WViewType &W,
-                  int &matrix_rank) {
+                  int &matrix_rank, const bool solve_only = false) {
       using value_type_a = typename AViewType::non_const_value_type;
       using value_type_x = typename XViewType::non_const_value_type;
       using value_type_b = typename BViewType::non_const_value_type;
@@ -104,11 +105,15 @@ namespace Tines {
       const int vs0 = n, vs1 = 1;
 
       int r_val(0);
-      r_val =
-        UTV_Internal ::invoke(member, m, n, Aptr, as0, as1, perm, ps, Uptr, us0,
-                              us1, Vptr, vs0, vs1, work_utv, matrix_rank);
-      member.team_barrier();
-
+      if (solve_only) {
+        /// do nothing
+      } else {
+        r_val =
+          UTV_Internal ::invoke(member, m, n, Aptr, as0, as1, perm, ps, Uptr, us0,
+                                us1, Vptr, vs0, vs1, work_utv, matrix_rank);
+        member.team_barrier();
+      }
+      
       value_type *Xptr = X.data();
       value_type *Bptr = B.data();
 
@@ -136,7 +141,7 @@ namespace Tines {
     KOKKOS_INLINE_FUNCTION static int
     device_invoke_simple(const MemberType &member, const AViewType &A,
                          const XViewType &X, const BViewType &B,
-                         const WViewType &W, int &matrix_rank) {
+                         const WViewType &W, int &matrix_rank, const bool solve_only = false) {
       using value_type_a = typename AViewType::non_const_value_type;
       using value_type_x = typename XViewType::non_const_value_type;
       using value_type_b = typename BViewType::non_const_value_type;
@@ -178,10 +183,14 @@ namespace Tines {
       const int us0 = m, us1 = 1;
 
       int r_val(0);
-      r_val = UTV_Internal ::invoke(member, m, n, Aptr, as0, as1, perm, ps0,
-                                    qptr, qs0, Uptr, us0, us1, sptr, ss0,
-                                    work_utv, matrix_rank);
-      member.team_barrier();
+      if (solve_only) {
+        /// do nothing
+      } else {
+        r_val = UTV_Internal ::invoke(member, m, n, Aptr, as0, as1, perm, ps0,
+                                      qptr, qs0, Uptr, us0, us1, sptr, ss0,
+                                      work_utv, matrix_rank);
+        member.team_barrier();
+      }
 
       value_type *Xptr = X.data();
       value_type *Bptr = B.data();
@@ -210,12 +219,12 @@ namespace Tines {
               typename BViewType, typename WViewType>
     KOKKOS_INLINE_FUNCTION static int
     invoke(const MemberType &member, const AViewType &A, const XViewType &X,
-           const BViewType &B, const WViewType &W, int &matrix_rank) {
+           const BViewType &B, const WViewType &W, int &matrix_rank, const bool solve_only = false) {
       int r_val(0);
 
 #if defined(TINES_ENABLE_SOLVE_LINEAR_SYSTEM_SIMPLE)
       /// simple version
-      r_val = device_invoke_simple(member, A, X, B, W, matrix_rank);
+      r_val = device_invoke_simple(member, A, X, B, W, matrix_rank, solve_only);
 #else
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
   defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
@@ -264,15 +273,15 @@ namespace Tines {
           r_val = SolveLinearSystem_HostTPL(
             m, n, nrhs, (value_type *)Aptr, as0, as1, (value_type *)Xptr, xs0,
             xs1, (value_type *)Bptr, bs0, bs1, (value_type *)wptr, wlen,
-            matrix_rank);
+            matrix_rank, solve_only);
         });
       } else {
         // r_val = device_invoke(member, A, X, B, W, matrix_rank);
-        r_val = device_invoke_simple(member, A, X, B, W, matrix_rank);
+        r_val = device_invoke_simple(member, A, X, B, W, matrix_rank, solve_only);
       }
 #else
       // r_val = device_invoke(member, A, X, B, W, matrix_rank);
-      r_val = device_invoke_simple(member, A, X, B, W, matrix_rank);
+      r_val = device_invoke_simple(member, A, X, B, W, matrix_rank, solve_only);
 #endif
 #endif
       return r_val;

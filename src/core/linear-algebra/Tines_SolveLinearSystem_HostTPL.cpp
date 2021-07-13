@@ -56,7 +56,8 @@ namespace Tines {
                                 double *A, const int as0, const int as1,
                                 double *X, const int xs0, const int xs1,
                                 double *B, const int bs0, const int bs1,
-                                double *W, const int wlen, int &matrix_rank) {
+                                double *W, const int wlen, int &matrix_rank,
+                                const bool solve_only) {
     int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
   defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
@@ -80,9 +81,12 @@ namespace Tines {
     const int us0 = m, us1 = 1;
     const int vs0 = n, vs1 = 1;
 
-    r_val = UTV_HostTPL(m, n, A, as0, as1, perm, tau, U, us0, us1, V, vs0, vs1,
-                        matrix_rank);
-
+    if (solve_only) {
+    } else {
+      r_val = UTV_HostTPL(m, n, A, as0, as1, perm, tau, U, us0, us1, V, vs0, vs1,
+                          matrix_rank);
+    }
+    
     if (nrhs == 1) {
       r_val = SolveUTV_HostTPL(m, n, matrix_rank, U, us0, us1, A, as0, as1, V,
                                vs0, vs1, perm, X, xs0, B, bs0, work);

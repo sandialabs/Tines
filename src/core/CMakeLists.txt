@@ -10,7 +10,8 @@ FILE(GLOB TINES_HDR
 )
 
 FILE(GLOB TINES_SRC
-	  "Tines.cpp"
+          "Tines.cpp"
+          "Tines_Progress.cpp"
 	  "linear-algebra/Tines_Gemv_HostTPL.cpp"
 	  "linear-algebra/Tines_Gemm_HostTPL.cpp"	  
 	  "linear-algebra/Tines_Gemm_Device.cpp"	  

@@ -47,7 +47,8 @@ int main(int argc, char *argv[]) {
                           Tines::ProblemTestTrBDF2>;
 
     using newton_solver_type = Tines::NewtonSolver<real_type, host_device_type>;
-
+    using progress_type = Tines::Progress;
+    
     problem_type problem;
     const int m = problem.getNumberOfEquations();
 
@@ -105,92 +106,95 @@ int main(int argc, char *argv[]) {
       const int max_time_integration = 1000;
       const real_type atol_newton(1e-6), rtol_newton(1e-5);
       const int max_iter(10), jacobian_interval(4);
+      {
+        progress_type progress(std::clog, 100u, "TrBDF2: ");
+        real_type t(0);
+        for (int titer = 0; titer < max_time_integration && dt != zero; ++titer) {
+          progress.show(t/tend);
+          trbdf_part1._dt = dt;
+          trbdf_part2._dt = dt;
 
-      real_type t(0);
-      for (int titer = 0; titer < max_time_integration && dt != zero; ++titer) {
-        trbdf_part1._dt = dt;
-        trbdf_part2._dt = dt;
+          /// part 1
+          {
+            /// set the views into trbdf
+            trbdf_part1._un = un;
+            trbdf_part1._fn = fn;
 
-        /// part 1
-        {
-          /// set the views into trbdf
-          trbdf_part1._un = un;
-          trbdf_part1._fn = fn;
+            problem.computeFunction(member, un, fn);
 
-          problem.computeFunction(member, un, fn);
+            /// simple setting for newton
+            int iter_count(0), converge(0);
 
-          /// simple setting for newton
-          int iter_count(0), converge(0);
+            /// solve the trapezoidal integration
+            newton_solver_type::invoke(member, trbdf_part1,
+                                       jacobian_interval,
+                                       atol_newton,
+                                       rtol_newton,
+                                       max_iter,
+                                       unr, dx, f, J, work,
+                                       iter_count, converge);
+            problem.computeFunction(member, unr, fnr);
 
-          /// solve the trapezoidal integration
-          newton_solver_type::invoke(member, trbdf_part1,
-                                     jacobian_interval,
-                                     atol_newton,
-                                     rtol_newton,
-                                     max_iter,
-                                     unr, dx, f, J, work,
-                                     iter_count, converge);
-          problem.computeFunction(member, unr, fnr);
-
-          if (!converge) {
-            std::cout
-              << "FAIL test problem (trbdf part1) fails to converge with "
-              << iter_count << " iterations\n";
-            std::runtime_error("trbdf part 1 does not converge");
+            if (!converge) {
+              std::cout
+                << "FAIL test problem (trbdf part1) fails to converge with "
+                << iter_count << " iterations\n";
+              std::runtime_error("trbdf part 1 does not converge");
+            }
           }
-        }
 
-        /// part 2
-        {
-          /// set the views into trbdf
-          trbdf_part2._un = un;
-          trbdf_part2._unr = unr;
+          /// part 2
+          {
+            /// set the views into trbdf
+            trbdf_part2._un = un;
+            trbdf_part2._unr = unr;
 
-          /// simple setting for newton
-          const real_type atol_newton(1e-6), rtol_newton(1e-5);
-          const int max_iter(10);
-          int iter_count(0), converge(0);
+            /// simple setting for newton
+            const real_type atol_newton(1e-6), rtol_newton(1e-5);
+            const int max_iter(10);
+            int iter_count(0), converge(0);
 
-          /// solve the BDF2 integration
-          newton_solver_type::invoke(member, trbdf_part2,
-                                     jacobian_interval,
-                                     atol_newton,
-                                     rtol_newton,
-                                     max_iter,
-                                     u, dx, f, J, work,
-                                     iter_count, converge);
-          problem.computeFunction(member, u, f);
+            /// solve the BDF2 integration
+            newton_solver_type::invoke(member, trbdf_part2,
+                                       jacobian_interval,
+                                       atol_newton,
+                                       rtol_newton,
+                                       max_iter,
+                                       u, dx, f, J, work,
+                                       iter_count, converge);
+            problem.computeFunction(member, u, f);
 
-          if (!converge) {
-            std::cout
-              << "FAIL test problem (trbdf part2) fails to converge with "
-              << iter_count << " iterations\n";
-            std::runtime_error("trbdf part 2 does not converge");
+            if (!converge) {
+              std::cout
+                << "FAIL test problem (trbdf part2) fails to converge with "
+                << iter_count << " iterations\n";
+              std::runtime_error("trbdf part 2 does not converge");
+            }
           }
-        }
 
-        /// part 3
-        {
-          t += dt;
-          for (int k = 0; k < m; ++k)
-            un(k) = u(k);
+          /// part 3
+          {
+            t += dt;
+            for (int k = 0; k < m; ++k)
+              un(k) = u(k);
 
-          trbdf.computeTimeStepSize(member, dtmin, dtmax, tol_time, m, fn, fnr,
-                                    f, u, dt);
-          if ((t + dt) > tend)
-            dt = tend - t;
-        }
-
-        /// print
-        {
-          const real_type err = problem.computeError(member, t, u);
-          printf("iter %6d, t %e, dt %e, u(0) %e, u(1) %e u(2) %e, err %e\n",
-                 titer, t, dt, u(0), u(1), u(2), err);
-          if (err > 1e-4) {
-            std::cout << "FAIL time integration error is unusually high\n";
-            is_pass = false;
+            trbdf.computeTimeStepSize(member, dtmin, dtmax, tol_time, m, fn, fnr,
+                                      f, u, dt);
+            if ((t + dt) > tend)
+              dt = tend - t;
           }
-        }
+
+          /// print
+          if (0) {
+            const real_type err = problem.computeError(member, t, u);
+            printf("iter %6d, t %e, dt %e, u(0) %e, u(1) %e u(2) %e, err %e\n",
+                   titer, t, dt, u(0), u(1), u(2), err);
+            if (err > 1e-4) {
+              std::cout << "FAIL time integration error is unusually high\n";
+              is_pass = false;
+            }
+          }
+        }        
       }
       if (is_pass)
         std::cout << "PASS TrBDF2\n";

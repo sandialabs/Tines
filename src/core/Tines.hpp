@@ -22,8 +22,8 @@ Sandia National Laboratories, New Mexico, USA
 #define __TINES_HPP__
 
 /// \author Kyungjoo Kim (kyukim@sandia.gov)
-
 #include "Tines_Internal.hpp"
+#include "Tines_Progress.hpp"
 
 /// linear algebra
 #include "Tines_ApplyPermutation.hpp"

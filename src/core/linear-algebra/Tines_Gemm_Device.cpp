@@ -68,7 +68,7 @@ namespace Tines {
     policy_type policy(exec_instance, A.extent(0), 1);
     Kokkos::parallel_for(
       "Tines::GemmOpenMP::parallel_for", policy,
-      KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+      [=](const typename policy_type::member_type &member) {
         const int i = member.league_rank();
         const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
         const auto _B = Kokkos::subview(B, i, Kokkos::ALL(), Kokkos::ALL());

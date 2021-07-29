@@ -150,7 +150,7 @@ namespace Tines {
            ValueType *w) { /// 3*m*nrhs
       using value_type = ValueType;
 
-      const value_type one(1), zero(0);
+      const value_type one(1)/*, zero(0)*/;
 
       value_type *z = w;
       w += m; /// m
@@ -204,7 +204,7 @@ namespace Tines {
            ValueType *w) { /// 3*m*nrhs
       using value_type = ValueType;
 
-      const value_type one(1), zero(0);
+      const value_type one(1)/*, zero(0)*/;
 
       value_type *Z = w;
       w += m * nrhs; /// m

@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     using ats = Tines::ats<real_type>;
 
     const bool use_tpl_if_avail = true;
-    const int np = 250, m = 800;
+    const int np = 8, m = 20;
     printf("Testing np %d, m %d\n", np, m);
     Tines::value_type_3d_view<real_type, device_type> A("A", np, m, m);
     Tines::value_type_2d_view<real_type, device_type> er("er", np, m);
@@ -79,6 +79,11 @@ int main(int argc, char **argv) {
       Kokkos::fence();
       t_eigensolve = timer.seconds();
       printf("Time per problem %e\n", t_eigensolve / double(np));
+    }
+    {
+      Tines::SortRightEigenPairsDevice<exec_space>
+        ::invoke(exec_space(),
+                 er, ei, V, W);
     }
 
     ///

@@ -99,7 +99,7 @@ namespace Tines {
       typedef ValueType value_type;
       typedef IntType int_type;
 
-      const int min_mn = (m < n ? m : n), max_mn = (m > n ? m : n);
+      const int /*min_mn = (m < n ? m : n), */max_mn = (m > n ? m : n);
 
       value_type *wptr = w;
       value_type *work = wptr;

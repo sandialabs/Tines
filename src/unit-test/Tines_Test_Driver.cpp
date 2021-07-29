@@ -27,15 +27,18 @@ Sandia National Laboratories, New Mexico, USA
 
 int TestExamplesInternal(std::string path, std::string exec) {
   {
+    int r_val(0);
     std::string logfile(exec + ".test-log");
     std::string rm=("rm -f " + logfile);
     const auto rm_c_str = rm.c_str();
-    std::system(rm_c_str);
+    r_val = std::system(rm_c_str); 
+    TINES_CHECK_ERROR(r_val, "system call rm -f returns non-zero return value");
     
     std::string invoke=("../example/" + path + exec + " > " + logfile);
     const auto invoke_c_str = invoke.c_str();
     printf("Tines testing : %s\n", invoke_c_str);
-    std::system(invoke_c_str);
+    r_val = std::system(invoke_c_str);
+    TINES_CHECK_ERROR(r_val, "system call example executable returns non-zero return value");
     std::ifstream file(logfile);
     for (std::string line; getline(file, line); ) {
       printf("%s\n", line.c_str());

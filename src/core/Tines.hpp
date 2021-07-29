@@ -64,6 +64,7 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines_EigendecompositionToComplex.hpp"
 #include "Tines_EigendecompositionValidateLeftEigenPairs.hpp"
 #include "Tines_EigendecompositionValidateRightEigenPairs.hpp"
+#include "Tines_SortRightEigenPairs_Device.hpp"
 
 #include "Tines_NumericalJacobianCentralDifference.hpp"
 #include "Tines_NumericalJacobianForwardDifference.hpp"

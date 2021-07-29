@@ -31,7 +31,8 @@ FILE(GLOB TINES_SRC
 	  "linear-algebra/Tines_SolveUTV_HostTPL.cpp"
  	  "linear-algebra/Tines_SolveLinearSystem_HostTPL.cpp"
 	  "linear-algebra/Tines_SolveEigenvaluesNonSymmetricProblem_HostTPL.cpp"
-	  "linear-algebra/Tines_SolveEigenvaluesNonSymmetricProblem_Device.cpp"	  
+	  "linear-algebra/Tines_SolveEigenvaluesNonSymmetricProblem_Device.cpp"
+	  "linear-algebra/Tines_SortRightEigenPairs_Device.cpp"	            
 )
 
 ADD_LIBRARY(tines STATIC ${TINES_SRC})

@@ -75,7 +75,7 @@ namespace Tines {
     policy_type policy(exec_instance, H.extent(0), 1);
     Kokkos::parallel_for(
       "Tines::SchurOpenMP::parallel_for", policy,
-      KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+      [=](const typename policy_type::member_type &member) {
         const int i = member.league_rank();
         const auto _H = Kokkos::subview(H, i, Kokkos::ALL(), Kokkos::ALL());
         const auto _Z = Kokkos::subview(Z, i, Kokkos::ALL(), Kokkos::ALL());

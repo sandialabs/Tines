@@ -153,6 +153,28 @@ namespace Tines {
   template <typename T> using ats = ArithTraits<T>;
 
   ///
+  /// sacado range specialization
+  ///
+  template <typename T>
+  struct RangeFactory {
+    template<typename MemberType, typename IntType>
+    KOKKOS_INLINE_FUNCTION
+    static auto TeamVectorRange(const MemberType &member, const IntType &count)
+      -> decltype(Kokkos::TeamVectorRange(member,count)) {
+      return Kokkos::TeamVectorRange(member, count);
+    }
+  };
+
+  template <typename T, int N> struct RangeFactory<Sacado::Fad::SLFad<T,N> > {
+    template<typename MemberType, typename IntType>
+    KOKKOS_INLINE_FUNCTION
+    static auto TeamVectorRange(const MemberType &member, const IntType &count)
+      -> decltype(Kokkos::TeamThreadRange(member,count)) {
+      return Kokkos::TeamThreadRange(member, count);
+    }
+  };
+  
+  ///
   /// create view
   ///
   template <typename ValueType, typename DeviceType> struct ViewFactory {

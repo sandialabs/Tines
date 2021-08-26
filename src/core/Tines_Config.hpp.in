@@ -36,6 +36,9 @@ Sandia National Laboratories, New Mexico, USA
 #cmakedefine TINES_ENABLE_TPL_LAPACKE
 #cmakedefine TINES_ENABLE_TPL_MKL
 #cmakedefine TINES_ENABLE_TPL_YAML
+#cmakedefine TINES_ENABLE_TPL_CUBLAS
+#cmakedefine TINES_ENABLE_TPL_CUSOLVER
+#cmakedefine TINES_ENABLE_TPL_CUSPARSE
 
 /// cblas
 #if defined(TINES_ENABLE_TPL_MKL) || defined(TINES_ENABLE_TPL_OPENBLAS)

@@ -27,6 +27,7 @@ LIST(APPEND TINES_EXAMPLE_SOURCES
 
 LIST(APPEND TINES_EXAMPLE_DEVICE_SOURCES
   Tines_FileInterface.cpp
+  Tines_GemmDevice.cpp
   Tines_HessenbergDevice.cpp
   Tines_SchurDevice.cpp
   Tines_RightEigenvectorSchurDevice.cpp

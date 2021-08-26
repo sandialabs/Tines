@@ -96,7 +96,11 @@ int main(int argc, char **argv) {
 	       Tines::ats<fad_type>::sacadoDerivativeDimension(work_fad(0)));
       }
     }
-
+    {
+      auto member = Tines::HostSerialTeamMember();
+      auto scalar_range = Tines::RangeFactory<double>::TeamVectorRange(member, 10);
+      auto fad_range = Tines::RangeFactory<FadType>::TeamVectorRange(member,10);
+    }
   }
   Kokkos::finalize();
   return 0;

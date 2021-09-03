@@ -62,10 +62,12 @@ namespace Tines {
       /// initialization fac if necessary
       Kokkos::parallel_for(
         Kokkos::TeamVectorRange(member, m),
-        [&](const int &i) { fac(i) = (fac(i) == zero ? eps_1_2 : fac(i)); });
+        [=](const int i) { fac(i) = (fac(i) == zero ? eps_1_2 : fac(i)); });
+      member.team_barrier();
 
       /// compute f_0
       problem.computeFunction(member, x, f_0);
+      member.team_barrier();
 
       /// loop over columns
       for (int j = 0; j < m; ++j) {
@@ -79,27 +81,28 @@ namespace Tines {
                       ? fac_min_use
                       : fac_at_j > fac_max_use ? fac_max_use : fac_at_j);
         });
+        member.team_barrier();
 
         /// x scale value in case that x(j) is zero
         const real_type xs = x_at_j; //(x_at_j != zero ? x_at_j : one);
         const real_type h = ats<real_type>::abs(fac(j) * xs) + eps;
 
         /// modify x vector
-        member.team_barrier();
         Kokkos::single(Kokkos::PerTeam(member), [&]() { x(j) = x_at_j + h; });
+        member.team_barrier();
 
         /// compute f_h
-        member.team_barrier();
         problem.computeFunction(member, x, f_h);
+        member.team_barrier();
 
         /// roll back the input vector
-        member.team_barrier();
         Kokkos::single(Kokkos::PerTeam(member), [&]() { x(j) = x_at_j; });
 
         /// compute jacobian at ith column
         Kokkos::parallel_for(
           Kokkos::TeamVectorRange(member, m),
           [&](const int &i) { J(i, j) = (f_h(i) - f_0(i)) / h; });
+        member.team_barrier();
 
         /// find location k
         int k(0);
@@ -110,7 +113,7 @@ namespace Tines {
           Kokkos::MaxLoc<real_type, int> reducer_value(value);
           Kokkos::parallel_reduce(
             Kokkos::TeamVectorRange(member, m),
-            [&](const int &i, reducer_value_type &update) {
+            [=](const int i, reducer_value_type &update) {
               const real_type val = ats<real_type>::abs(f_h(i) - f_0(i));
               if (val > update.val) {
                 update.val = val;

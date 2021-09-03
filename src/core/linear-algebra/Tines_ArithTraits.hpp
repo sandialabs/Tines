@@ -123,6 +123,10 @@ namespace Tines {
       return FLT_EPSILON * FLT_RADIX;
     }
 
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x;
+    }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
       return 1;
@@ -232,6 +236,10 @@ namespace Tines {
       return DBL_EPSILON * FLT_RADIX;
     }
 
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x;
+    }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
       return 1;
@@ -307,6 +315,10 @@ namespace Tines {
       return ats::prec();
     }
 
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x;
+    }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
       return 1;
@@ -367,7 +379,10 @@ namespace Tines {
     static inline int base() { return ats::base(); }
     static inline magnitude_type prec() { return ats::prec(); }
 
-
+    static inline scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x;
+    }
     static inline int sacadoStorageCapacity() {  return 1; }    
     static inline int sacadoStorageDimension(value_type &x) { return 0; }
     static inline int sacadoDerivativeDimension(const value_type &x) { return 0; }
@@ -450,6 +465,11 @@ namespace Tines {
     static KOKKOS_FORCEINLINE_FUNCTION magnitude_type epsilon() { return 0; }
     static KOKKOS_FORCEINLINE_FUNCTION magnitude_type sfmin() { return 0; }
 
+
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x;
+    }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
       return 1;
@@ -559,6 +579,10 @@ namespace Tines {
       return DBL_MIN;
     }
 
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x.val();
+    }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
       return FadDimUpperBound;

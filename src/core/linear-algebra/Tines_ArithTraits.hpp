@@ -585,7 +585,7 @@ namespace Tines {
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageCapacity() {
-      return FadDimUpperBound;
+      return sizeof(value_type)/sizeof(scalar_type);
     }
     static KOKKOS_FORCEINLINE_FUNCTION int
     sacadoStorageDimension(const value_type &x) {

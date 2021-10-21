@@ -38,6 +38,8 @@ int main(int argc, char **argv) {
     using ats = Tines::ats<real_type>;
 
     const bool use_tpl_if_avail = true;
+    const bool compute_and_sort_eigenpairs = true;
+
     const int np = 8, m = 20;
     printf("Testing np %d, m %d\n", np, m);
     Tines::value_type_3d_view<real_type, device_type> A("A", np, m, m);
@@ -63,27 +65,40 @@ int main(int argc, char **argv) {
 
     /// keep orginal A in complex form
     {
-      auto Ac_real =
-        Kokkos::subview(Ar, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), 0);
+      auto Ac_real = Kokkos::subview(Ar, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), 0);
       auto A_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
       Kokkos::deep_copy(Ac_real, A_host);
     }
 
+    /// control object
+    Tines::control_type control;
+
+    /// tpl use
+    control["Bool:UseTPL"].bool_value = use_tpl_if_avail;
+
+    /// testing for eigen solve
+    control["Bool:SolveEigenvaluesNonSymmetricProblem:Sort"].bool_value = compute_and_sort_eigenpairs;
+    // control["IntPair:Hessenberg:TeamSize"].int_pair_value = std::pair<int,int>(1,1);
+    // control["IntPair:RightEigenvectorSchur:TeamSize"].int_pair_value = std::pair<int,int>(1,1);
+    // control["IntPair:Gemm:TeamSize"].int_pair_value = std::pair<int,int>(1,1);
+
+    // /// testing for sorting
+    // control["IntPair:SortRightEigenPairs:TeamSize"].int_pair_value = std::pair<int,int>(1,1);
+    
     /// A = V^{-1} S V
     double t_eigensolve(0);
     {
       Kokkos::fence();
       Kokkos::Impl::Timer timer;
-      Tines::SolveEigenvaluesNonSymmetricProblemDevice<exec_space>::invoke(
-        exec_space(), A, er, ei, V, W, use_tpl_if_avail);
+      Tines::SolveEigenvaluesNonSymmetricProblemDevice<exec_space>
+	::invoke(exec_space(), A, er, ei, V, W, control);
       Kokkos::fence();
       t_eigensolve = timer.seconds();
       printf("Time per problem %e\n", t_eigensolve / double(np));
     }
-    {
+    if (!compute_and_sort_eigenpairs) {
       Tines::SortRightEigenPairsDevice<exec_space>
-        ::invoke(exec_space(),
-                 er, ei, V, W);
+        ::invoke(exec_space(), er, ei, V, W, control);
     }
 
     ///
@@ -109,7 +124,15 @@ int main(int argc, char **argv) {
         const auto ei_at_i_host = Kokkos::subview(ei_host, i, Kokkos::ALL());
         const auto V_at_i_host =
           Kokkos::subview(V_host, i, Kokkos::ALL(), Kokkos::ALL());
-
+	if (i == 0) {
+	  for (int j=0,jend=er_at_i_host.extent(0);j<jend;++j) {
+	    const auto erval = er_at_i_host(j);
+	    const auto eival = ei_at_i_host(j);
+	    const auto eval = std::complex<real_type>(erval, eival);
+	    printf("j %d, er %e, ei %e, mag %e\n",
+		   j, erval, eival, std::abs(eval));
+	  }
+	}
         Tines::EigendecompositionToComplex::invoke(
           member, er_at_i_host, ei_at_i_host, V_at_i_host, ec, Vc);
 

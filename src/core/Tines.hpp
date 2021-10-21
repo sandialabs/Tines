@@ -26,6 +26,7 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines_Progress.hpp"
 
 /// linear algebra
+#include "Tines_ComputeSortingIndices.hpp"
 #include "Tines_ApplyPermutation.hpp"
 #include "Tines_ApplyPivot.hpp"
 #include "Tines_CheckNanInf.hpp"

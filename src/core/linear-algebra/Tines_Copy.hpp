@@ -35,7 +35,7 @@ namespace Tines {
       using value_type_b = typename BViewType::non_const_value_type;
 
       const int mA = A.extent(0), mB = B.extent(0), m = mA;
-      assert(mA > mB);
+      assert(mA <= mB);
 
       value_type_a *Aptr = A.data();
       const int as = A.stride(0);

@@ -75,6 +75,16 @@ namespace Tines {
 #define TINES_DEBUG_CHECK_ERROR(err, msg)
 #endif
 
+  struct ProfilingRegionScope {
+    ProfilingRegionScope () = delete;
+    ProfilingRegionScope (const std::string & label) {
+      Kokkos::Tools::pushRegion(label);
+    };
+    ~ProfilingRegionScope () {
+      Kokkos::Tools::popRegion();
+    }
+  };
+  
   /// Define valid kokkos execution space that we support
   template <typename SpT> struct ValidExecutionSpace {
     static constexpr bool value = (
@@ -90,6 +100,16 @@ namespace Tines {
       false);
   };
 
+  union ControlValue {
+    std::pair<int,int> int_pair_value;
+    bool bool_value;
+    ControlValue() { memset( this, 0, sizeof(ControlValue) ); }
+  };
+  using control_key_type = std::string;
+  using control_value_type = ControlValue;
+  using control_type = std::map<control_key_type,control_value_type>;
+  using do_not_init_tag = Kokkos::ViewAllocateWithoutInitializing;  
+  
   /// Kokkos device type
   template <typename ExecSpace> struct UseThisDevice {
     using type = Kokkos::Device<ExecSpace, Kokkos::HostSpace>;
@@ -165,6 +185,7 @@ namespace Tines {
     }
   };
 
+#if defined(SACADO_VIEW_CUDA_HIERARCHICAL)
   template <typename T, int N> struct RangeFactory<Sacado::Fad::SLFad<T,N> > {
     template<typename MemberType, typename IntType>
     KOKKOS_INLINE_FUNCTION
@@ -173,7 +194,8 @@ namespace Tines {
       return Kokkos::TeamThreadRange(member, count);
     }
   };
-  
+#endif
+
   ///
   /// create view
   ///

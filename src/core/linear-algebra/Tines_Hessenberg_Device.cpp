@@ -25,16 +25,17 @@ namespace Tines {
 #if defined(KOKKOS_ENABLE_SERIAL)
   int HessenbergDevice<Kokkos::Serial>::invoke(
     const Kokkos::Serial &exec_instance,
-    const value_type_3d_view<double,
-                             typename UseThisDevice<Kokkos::Serial>::type> &A,
-    const value_type_3d_view<double,
-                             typename UseThisDevice<Kokkos::Serial>::type> &Q,
-    const value_type_2d_view<double,
-                             typename UseThisDevice<Kokkos::Serial>::type> &t,
-    const value_type_2d_view<double,
-                             typename UseThisDevice<Kokkos::Serial>::type> &w,
-    const bool use_tpl_if_avail) {
-    Kokkos::Profiling::pushRegion("Tines::HessenbergSerial");
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &control ) {
+    ProfilingRegionScope region("Tines::HessenbergSerial");
+    bool use_tpl_if_avail(true);
+    {
+      const auto it = control.find("Bool:UseTPL");
+      if (it != control.end()) use_tpl_if_avail = it->second.bool_value;
+    }
     const auto member = Tines::HostSerialTeamMember();
     const int iend = A.extent(0);
     const double zero(0);
@@ -47,8 +48,6 @@ namespace Tines {
       Tines::HessenbergFormQ::invoke(member, _A, _t, _Q, _w, use_tpl_if_avail);
       Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
     }
-
-    Kokkos::Profiling::popRegion();
     return 0;
   }
 #endif
@@ -56,16 +55,17 @@ namespace Tines {
 #if defined(KOKKOS_ENABLE_OPENMP)
   int HessenbergDevice<Kokkos::OpenMP>::invoke(
     const Kokkos::OpenMP &exec_instance,
-    const value_type_3d_view<double,
-                             typename UseThisDevice<Kokkos::OpenMP>::type> &A,
-    const value_type_3d_view<double,
-                             typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
-    const value_type_2d_view<double,
-                             typename UseThisDevice<Kokkos::OpenMP>::type> &t,
-    const value_type_2d_view<double,
-                             typename UseThisDevice<Kokkos::OpenMP>::type> &w,
-    const bool use_tpl_if_avail) {
-    Kokkos::Profiling::pushRegion("Tines::HessenbergOpenMP");
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &control) {
+    ProfilingRegionScope region("Tines::HessenbergOpenMP");
+    bool use_tpl_if_avail(true);
+    {
+      const auto it = control.find("Bool:UseTPL");
+      if (it != control.end()) use_tpl_if_avail = it->second.bool_value;
+    }
     using policy_type = Kokkos::TeamPolicy<Kokkos::OpenMP>;
     policy_type policy(exec_instance, A.extent(0), 1);
     Kokkos::parallel_for(
@@ -82,8 +82,6 @@ namespace Tines {
                                        use_tpl_if_avail);
         Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
       });
-
-    Kokkos::Profiling::popRegion();
     return 0;
   }
 #endif
@@ -91,22 +89,26 @@ namespace Tines {
 #if defined(KOKKOS_ENABLE_CUDA)
   int HessenbergDevice<Kokkos::Cuda>::invoke(
     const Kokkos::Cuda &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type>
-      &A,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type>
-      &Q,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type>
-      &t,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type>
-      &w,
-    const bool use_tpl_if_avail) {
-    Kokkos::Profiling::pushRegion("Tines::HessenbergCuda");
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type & control) {
+    ProfilingRegionScope region("Tines::HessenbergCuda");
+
+    /// default
     const int league_size = A.extent(0);
     using policy_type = Kokkos::TeamPolicy<Kokkos::Cuda>;
     policy_type policy(exec_instance, league_size, Kokkos::AUTO);
 
-    /// let's guess....
-    {
+    /// check control
+    const auto it = control.find("IntPair:Hessenberg:TeamSize");
+    if (it != control.end()) {
+      /// use the provided team vector setting
+      const auto & team = it->second.int_pair_value;
+      policy = policy_type(exec_instance, league_size, team.first, team.second);
+    } else {
+      /// let's guess....
       const int np = A.extent(0), m = A.extent(1);
       if (np > 100000) {
         /// we have enough batch parallelism... use AUTO
@@ -126,12 +128,10 @@ namespace Tines {
           vector_size = 16;
           team_size = total_team_size / vector_size;
         }
-        policy =
-          policy_type(exec_instance, league_size, team_size, vector_size);
+        policy = policy_type(exec_instance, league_size, team_size, vector_size);
       }
     }
-    // this is for testing only
-    // policy = policy_type(exec_instance, league_size, 32, 32);
+
     Kokkos::parallel_for(
       "Tines::HessenbergCuda::parallel_for", policy,
       KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
@@ -146,7 +146,7 @@ namespace Tines {
         Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
       });
 
-    Kokkos::Profiling::popRegion();
+    
     return 0;
   }
 #endif

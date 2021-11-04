@@ -22,68 +22,15 @@ Sandia National Laboratories, New Mexico, USA
 
 namespace Tines {
 
-  struct ComputePermutationInternal {
-    template<typename MemberType, typename IntType, typename ValueType>
-    inline static int
-    invoke(const MemberType &member, const int m,
-           const ValueType * a, const int as, /// 1d array
-           IntType * p, const int ps,
-           ValueType * w) { /// work space is 2*m
-      using pair_type = std::pair<IntType,ValueType>;
-      pair_type * s = (pair_type*)w;
-
-      /// set index type
-      for (int i=0;i<m;++i)
-        s[i] = pair_type(i, a[i*as]);
-
-      /// sort
-      std::sort(s, s+m, [](const pair_type &x, const pair_type &y) {
-          return (x.second > y.second);
-        });
-
-      /// put it back
-      for (int i=0;i<m;++i) {
-        p[i*ps] = s[i].first;
-      }
-      return 0;
-    }
-    template<typename MemberType, typename IntType, typename ValueType>
-    inline static int
-    invoke(const MemberType &member, const int m,
-           const ValueType * ar, const int ars, /// 1d array
-	   const ValueType * ai, const int ais, /// 1d array
-           IntType * p, const int ps,
-           ValueType * w) { /// work space is 2*m
-      using pair_type = std::pair<IntType,ValueType>;
-      pair_type * s = (pair_type*)w;
-
-      /// set index type
-      for (int i=0;i<m;++i) {
-	ValueType mag = std::abs(std::complex<ValueType>(ar[i*ars],ai[i*ais]));
-        s[i] = pair_type(i, mag);
-      }
-
-      /// sort
-      std::sort(s, s+m, [](const pair_type &x, const pair_type &y) {
-          return (x.second > y.second);
-        });
-
-      /// put it back
-      for (int i=0;i<m;++i) {
-        p[i*ps] = s[i].first;
-      }
-      return 0;
-    }
-  };
-
 #if defined(KOKKOS_ENABLE_SERIAL)
   int SortRightEigenPairsDevice<Kokkos::Serial>::
   invoke(const Kokkos::Serial &exec_instance,
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &er,
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &ei,
          const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W) {
-    Kokkos::Profiling::pushRegion("Tines::SortRightEigenPairsSerial");
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W,
+	 const control_type &) {
+    ProfilingRegionScope region("Tines::SortRightEigenPairsSerial");
 
     const int np = er.extent(0), m = er.extent(1);
     /// W > m * max(3, m)
@@ -106,7 +53,7 @@ namespace Tines {
       const int ers = _er.stride(0), eis = _ei.stride(0),
         vs0 = _V.stride(0), vs1 = _V.stride(1);
 
-      ComputePermutationInternal
+      ComputeSortingIndicesInternal
         ::invoke(member, m,
                  erptr, ers,
                  eiptr, eis,
@@ -145,7 +92,7 @@ namespace Tines {
                  vptr, vs1, vs0);
     }
 
-    Kokkos::Profiling::popRegion();
+    
     return 0;
   }
 #endif
@@ -155,8 +102,9 @@ namespace Tines {
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
          const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W) {
-    Kokkos::Profiling::pushRegion("Tines::SortRightEigenPairsOpenMP");
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
+	 const control_type & control) {
+    ProfilingRegionScope region("Tines::SortRightEigenPairsOpenMP");
 
     const int np = er.extent(0), m = er.extent(1);
     /// W > m * max(3, m)
@@ -180,7 +128,7 @@ namespace Tines {
         int * pptr = (int*)_W.data();
         const int ers = _er.stride(0), eis = _ei.stride(0), vs0 = _V.stride(0), vs1 = _V.stride(1);
 
-        ComputePermutationInternal
+        ComputeSortingIndicesInternal
           ::invoke(member, m,
                    erptr, ers,
 		   eiptr, eis,
@@ -219,7 +167,7 @@ namespace Tines {
                    vptr, vs1, vs0);
       });
 
-    Kokkos::Profiling::popRegion();
+    
     return 0;
   }
 #endif
@@ -229,8 +177,9 @@ namespace Tines {
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &er,
          const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
          const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W) {
-    Kokkos::Profiling::pushRegion("Tines::SortRightEigenPairsCuda");
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+	 const control_type &control) {
+    ProfilingRegionScope region("Tines::SortRightEigenPairsCuda");
 
     const int np = er.extent(0), m = er.extent(1);
     /// W > m * max(3, m)
@@ -261,7 +210,7 @@ namespace Tines {
           int * pptr = (int*)_W.data();
           const int ers = _er.stride(0), eis = _ei.stride(0);
 
-          ComputePermutationInternal
+          ComputeSortingIndicesInternal
             ::invoke(member, m,
                      erptr, ers,
 		     eiptr, eis,
@@ -273,87 +222,91 @@ namespace Tines {
     }
 
     {
+      /// default
       using policy_type = Kokkos::TeamPolicy<Kokkos::Cuda>;
       policy_type policy(exec_instance, np, Kokkos::AUTO);
 
-      /// let's guess....
-      if (np > 100000) {
-        /// we have enough batch parallelism... use AUTO
+      /// check control
+      const auto it = control.find("IntPair:SortRightEigenPairs:TeamSize");
+      if (it != control.end()) {
+	const auto team = it->second.int_pair_value;
+        policy = policy_type(exec_instance, np, team.first, team.second);
       } else {
-        /// batch parallelsim itself cannot occupy the whole device
-        int vector_size(0), team_size(0);
-        if (m <= 32) {
-          const int total_team_size = 32;
-          vector_size = 32;
-          team_size = total_team_size / vector_size;
-        } else if (m <= 64) {
-          const int total_team_size = 64;
-          vector_size = 64;
-          team_size = total_team_size / vector_size;
-        } else if (m <= 128) {
-          const int total_team_size = 128;
-          vector_size = 128;
-          team_size = total_team_size / vector_size;
-        } else if (m <= 256) {
-          const int total_team_size = 256;
-          vector_size = 256;
-          team_size = total_team_size / vector_size;
-        } else {
-          const int total_team_size = 512;
-          vector_size = 512;
-          team_size = total_team_size / vector_size;
-        }
-        policy =
-          policy_type(exec_instance, np, team_size, vector_size);
-      }
-
+	/// let's guess....
+	if (np > 100000) {
+	  /// we have enough batch parallelism... use AUTO
+	} else {
+	  /// batch parallelsim itself cannot occupy the whole device
+	  int vector_size(0), team_size(0);
+	  if (m <= 32) {
+	    const int total_team_size = 32;
+	    vector_size = 32;
+	    team_size = total_team_size / vector_size;
+	  } else if (m <= 64) {
+	    const int total_team_size = 64;
+	    vector_size = 64;
+	    team_size = total_team_size / vector_size;
+	  } else if (m <= 128) {
+	    const int total_team_size = 128;
+	    vector_size = 128;
+	    team_size = total_team_size / vector_size;
+	  } else if (m <= 256) {
+	    const int total_team_size = 256;
+	    vector_size = 256;
+	    team_size = total_team_size / vector_size;
+	  } else {
+	    const int total_team_size = 512;
+	    vector_size = 512;
+	    team_size = total_team_size / vector_size;
+	  }
+	  policy = policy_type(exec_instance, np, team_size, vector_size);
+	}
+      }	
       Kokkos::parallel_for
-        ("Tines::SortRightEigenPairsCuda::parallel_for",
-         policy,  KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
-          const int i = member.league_rank();
-          const auto _er = Kokkos::subview(er, i, Kokkos::ALL());
-          const auto _ei = Kokkos::subview(ei, i, Kokkos::ALL());
-          const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
-          const auto _W  = Kokkos::subview(W,  i, Kokkos::ALL());
-
-          double * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
-          int * pptr = (int*)_W.data();
-          const int ers = _er.stride(0), eis = _ei.stride(0), vs0 = _V.stride(0), vs1 = _V.stride(1);
-
-          CopyInternal
-            ::invoke(member, m,
-                     erptr, ers,
-                     wptr, 1);
-          ApplyPermutationVectorBackwardInternal
-            ::invoke(member, m,
-                     pptr, 1,
-                     wptr, 1,
-                     erptr, ers);
-
-          CopyInternal
-            ::invoke(member, m,
-                     eiptr, eis,
-                     wptr, 1);
-          ApplyPermutationVectorBackwardInternal
-            ::invoke(member, m,
-                     pptr, 1,
-                     wptr, 1,
-                     eiptr, eis);
-
-          CopyInternal
-            ::invoke(member, Trans::NoTranspose(),
-                     m, m,
-                     vptr, vs0, vs1,
-                     wptr, m, 1);
-          ApplyPermutationMatrixBackwardInternal
-            ::invoke(member, m, m,
-                     pptr, 1,
-                     wptr, 1, m,
-                     vptr, vs1, vs0);
-        });
+	("Tines::SortRightEigenPairsCuda::parallel_for",
+	 policy,  KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+	  const int i = member.league_rank();
+	  const auto _er = Kokkos::subview(er, i, Kokkos::ALL());
+	  const auto _ei = Kokkos::subview(ei, i, Kokkos::ALL());
+	  const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
+	  const auto _W  = Kokkos::subview(W,  i, Kokkos::ALL());
+	  
+	  double * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
+	  int * pptr = (int*)_W.data();
+	  const int ers = _er.stride(0), eis = _ei.stride(0), vs0 = _V.stride(0), vs1 = _V.stride(1);
+	  
+	  CopyInternal
+	    ::invoke(member, m,
+		     erptr, ers,
+		     wptr, 1);
+	  ApplyPermutationVectorBackwardInternal
+	    ::invoke(member, m,
+		     pptr, 1,
+		     wptr, 1,
+		     erptr, ers);
+	  
+	  CopyInternal
+	    ::invoke(member, m,
+		     eiptr, eis,
+		     wptr, 1);
+	  ApplyPermutationVectorBackwardInternal
+	    ::invoke(member, m,
+		     pptr, 1,
+		     wptr, 1,
+		     eiptr, eis);
+	  
+	  CopyInternal
+	    ::invoke(member, Trans::NoTranspose(),
+		     m, m,
+		     vptr, vs0, vs1,
+		     wptr, m, 1);
+	  ApplyPermutationMatrixBackwardInternal
+	    ::invoke(member, m, m,
+		     pptr, 1,
+		     wptr, 1, m,
+		     vptr, vs1, vs0);
+	});
     }
-
-    Kokkos::Profiling::popRegion();
     return 0;
   }
 #endif

@@ -98,7 +98,7 @@ For GPUs, the compiler is changed with ``nvcc_wrapper`` by adding ``-D CMAKE_CXX
 
 ### GTEST
 
-We use GTEST as our testing infrastructure. GTEST can be compiled and installed using the following cmake script
+We use GTEST as our testing infrastructure. GTEST can be compiled and installed using the following cmake script.
 
 ```
 cd ${GTEST_BUILD_PATH}

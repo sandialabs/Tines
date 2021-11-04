@@ -22,7 +22,6 @@ Sandia National Laboratories, New Mexico, USA
 #define __TINES_APPLY_PERMUTATION_HPP__
 
 #include "Tines_ApplyPermutation_Internal.hpp"
-#include "Tines_Internal.hpp"
 
 namespace Tines {
 
@@ -79,15 +78,13 @@ namespace Tines {
       constexpr bool is_value_type_same =
         (std::is_same<value_type_a, value_type_b>::value);
       static_assert(is_value_type_same, "value_type of A and B does not match");
-      static_assert(AViewType::rank == BViewType::rank,
-                    "rank of A and B does not match");
 
-      if (AViewType::rank == 1) {
+      if (AViewType::rank == 1 && BViewType::rank == 1) {
         const int plen = piv.extent(0), ps0 = piv.stride(0), as0 = A.stride(0),
                   bs0 = B.stride(0);
         ApplyPermutationVectorBackwardInternal ::invoke(
           member, plen, piv.data(), ps0, A.data(), as0, B.data(), bs0);
-      } else if (AViewType::rank == 2) {
+      } else if (AViewType::rank == 2 && BViewType::rank == 2) {
         // col permutation
         const int plen = piv.extent(0), ps0 = piv.stride(0), m = A.extent(0);
         const int as0 = A.stride(0), as1 = A.stride(1), bs0 = B.stride(0),
@@ -95,6 +92,9 @@ namespace Tines {
         ApplyPermutationMatrixBackwardInternal ::invoke(
           member, plen, m, piv.data(), ps0, A.data(), as1, as0, B.data(), bs1,
           bs0);
+      } else {
+        /// wrong
+        printf("rank does not match\n");
       }
       return 0;
     }

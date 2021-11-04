@@ -30,7 +30,8 @@ namespace Tines {
       const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &er,
       const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &ei,
       const value_type_3d_view<double, typename UseThisDevice<SpT>::type> &V,
-      const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &W) {
+      const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &W,
+      const control_type &control = control_type()) {
       TINES_CHECK_ERROR(!ValidExecutionSpace<SpT>::value,
                         "Error: the given execution space is not implemented");
       return -1;
@@ -45,7 +46,8 @@ namespace Tines {
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &er,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &ei,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
-      const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W);
+      const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W,
+      const control_type &control = control_type());      
   };
 #endif
 #if defined(KOKKOS_ENABLE_OPENMP)
@@ -56,7 +58,8 @@ namespace Tines {
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
-      const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W);
+      const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
+      const control_type &control = control_type());            
   };
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -67,7 +70,8 @@ namespace Tines {
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &er,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
-      const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W);
+      const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+      const control_type &control = control_type());            
   };
 #endif
 

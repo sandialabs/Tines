@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     double t_eigensolve(0);
     {
       Kokkos::fence();
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       Tines::SolveEigenvaluesNonSymmetricProblemDevice<exec_space>
 	::invoke(exec_space(), A, er, ei, V, W, control);
       Kokkos::fence();

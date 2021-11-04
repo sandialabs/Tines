@@ -40,7 +40,7 @@ Sandia National Laboratories, New Mexico, USA
 #include "Kokkos_Core.hpp"
 #include "Kokkos_DualView.hpp"
 #include "Kokkos_Random.hpp"
-#include "impl/Kokkos_Timer.hpp"
+#include "Kokkos_Timer.hpp"
 #include "Sacado.hpp"
 #include "Tines_ArithTraits.hpp"
 #include "Tines_Config.hpp"
@@ -202,7 +202,7 @@ namespace Tines {
   template <typename ValueType, typename DeviceType> struct ViewFactory {
     using value_type = ValueType;
     using device_type = DeviceType;
-
+    
     using value_type_0d_view_type = value_type_0d_view<value_type,device_type>;
     KOKKOS_INLINE_FUNCTION
     static value_type_0d_view_type create_0d_view(value_type * data, const int dummy = 0) { return value_type_0d_view_type(data); }        
@@ -273,10 +273,11 @@ namespace Tines {
   ///
   /// default team member for host stand alone code
   ///
+                       
   static Kokkos::Impl::HostThreadTeamMember<Kokkos::Serial>
   HostSerialTeamMember() {
-    return Kokkos::Impl::HostThreadTeamMember<Kokkos::Serial>(
-      *Kokkos::Impl::serial_get_thread_team_data());
+    auto& data = Kokkos::Serial().impl_internal_space_instance()->m_thread_team_data;
+    return Kokkos::Impl::HostThreadTeamMember<Kokkos::Serial>(data);
   }
 
   ///

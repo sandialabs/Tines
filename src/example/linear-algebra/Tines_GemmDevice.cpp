@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 
     double t_gemm(0);
     {
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       Tines::GemmDevice<Trans::NoTranspose,Trans::NoTranspose,exec_space>
         ::invoke(exec_space(), one, A, B, zero, C);
       Kokkos::fence();
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     {
       const auto A_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
       const auto B_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       Tines::GemmDevice<Trans::NoTranspose,Trans::NoTranspose,host_exec_space>
         ::invoke(host_exec_space(), one, A_host, B_host, zero, CC);
       Kokkos::fence();

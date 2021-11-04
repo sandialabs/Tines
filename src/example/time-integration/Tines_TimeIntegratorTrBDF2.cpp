@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
         tol_time(i, 1) = 1e-6;
       }
 
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       timer.reset();
       time_integrator_type::invoke(member, problem, jacobian_interval,
                                    max_num_newton_iterations,

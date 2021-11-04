@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     double t_right_eigenvector(0);
     {
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       Tines::RightEigenvectorSchurDevice<exec_space>::invoke(exec_space(), A, b,
                                                              V, w);
       Kokkos::fence();

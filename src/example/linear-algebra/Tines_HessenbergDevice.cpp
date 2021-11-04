@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     /// A = Q H Q^H
     double t_hessenberg(0);
     {
-      Kokkos::Impl::Timer timer;
+      Kokkos::Timer timer;
       Tines::HessenbergDevice<exec_space>::invoke(exec_space(), A, Q, t, w);
       Kokkos::fence();
       t_hessenberg = timer.seconds();

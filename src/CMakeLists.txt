@@ -1,11 +1,15 @@
-# Kokkos requires 3.3
-CMAKE_MINIMUM_REQUIRED(VERSION 3.3)
+# higher cmake version is required as Kokkos needs it
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
 
 # Project TINES
-PROJECT(TINES)
+PROJECT(TINES VERSION 1.0.2 LANGUAGES C CXX)
+
+# Built-in modules
+INCLUDE(GNUInstallDirs)
+INCLUDE(CMakePackageConfigHelpers)
 
 # CMAKE setup
-SET(CMAKE_VERBOSE_MAKEFILE ON) # see all output
+#SET(CMAKE_VERBOSE_MAKEFILE ON) # see all output
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
 
 # Define BUILD_TESTING in cmake
@@ -22,6 +26,7 @@ ENDIF()
 MESSAGE(STATUS "CMAKE_INSTALL_LIBDIR is set ${CMAKE_INSTALL_LIBDIR}")
 
 SET(TINES_INSTALL_LIB_PATH     ${CMAKE_INSTALL_LIBDIR})
+SET(TINES_INSTALL_BIN_PATH     bin)
 SET(TINES_INSTALL_INCLUDE_PATH include/tines)
 SET(TINES_INSTALL_TEST_PATH    unit-test)
 SET(TINES_INSTALL_EXAMPLE_PATH example)
@@ -135,7 +140,7 @@ IF (TINES_ENABLE_MKL)
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -mkl")
     MESSAGE("-- MKL is enabled (use intel compiler supporting -mkl)")
   ELSE()
-    MESSAGE(FATAL_ERROR "-- MKL is not enabled (use intel compiler supporting -mkl)")
+    MESSAGE(FATAL_ERROR "-- MKL is not enabled (use intel compiler supporting -mkl); MKL is not enabled")
   ENDIF()
 ENDIF()
 
@@ -150,7 +155,7 @@ IF (YAML_INSTALL_PATH)
   SET(TINES_INTERNAL_YAML_TARGET "yaml")
   LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_YAML_TARGET})  
 ELSE()
-  MESSAGE(WARNING "-- YAML_INSTALL_PATH is not provided")    
+  MESSAGE(WARNING "-- YAML_INSTALL_PATH is not provided; YAML TPL is not enabled")    
 ENDIF()
 
 #
@@ -164,7 +169,7 @@ IF (CUDA_INSTALL_PATH)
   SET(TINES_INTERNAL_CUDA_TARGET "cublas")
   LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_CUDA_TARGET})  
 ELSE()
-  MESSAGE(WARNING "-- CUDA_INSTALL_PATH is not provided")    
+  MESSAGE(WARNING "-- CUDA_INSTALL_PATH is not provided; CUDA TPLs are not enabled")
 ENDIF()
 
 #

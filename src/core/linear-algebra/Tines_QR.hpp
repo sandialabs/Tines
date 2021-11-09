@@ -29,6 +29,9 @@ namespace Tines {
   int QR_HostTPL(const int m, const int n, double *A, const int as0,
                  const int as1, double *tau);
 
+  int QR_HostTPL(const int m, const int n, float *A, const int as0,
+                 const int as1, float *tau);
+
   struct QR {
     template <typename MemberType, typename AViewType, typename tViewType,
               typename wViewType>

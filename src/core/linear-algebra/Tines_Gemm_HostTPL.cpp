@@ -101,4 +101,80 @@ namespace Tines {
 #endif
   }
 
+
+
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k, const float alpha,
+                   const float *A, const int as0, const int as1,
+                   const float *B, const int bs0, const int bs1,
+                   const float beta, float *C, const int cs0, const int cs1) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int ldb = (bs0 == 1 ? bs1 : bs0);
+    const int ldc = (cs0 == 1 ? cs1 : cs0);
+
+    cblas_sgemm(cblas_layout, Trans_TagToCblas(transa_tag),
+                Trans_TagToCblas(transb_tag), m, n, k, alpha, A, lda, B, ldb,
+                beta, C, ldc);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k,
+                   const Kokkos::complex<float> alpha,
+                   const Kokkos::complex<float> *A, const int as0,
+                   const int as1, const Kokkos::complex<float> *B,
+                   const int bs0, const int bs1,
+                   const Kokkos::complex<float> beta,
+                   Kokkos::complex<float> *C, const int cs0, const int cs1) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int ldb = (bs0 == 1 ? bs1 : bs0);
+    const int ldc = (cs0 == 1 ? cs1 : cs0);
+
+    cblas_cgemm(cblas_layout, Trans_TagToCblas(transa_tag),
+                Trans_TagToCblas(transb_tag), m, n, k, (const void *)&alpha,
+                (const void *)A, lda, (const void *)B, ldb, (const void *)&beta,
+                (void *)C, ldc);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k, const std::complex<float> alpha,
+                   const std::complex<float> *A, const int as0, const int as1,
+                   const std::complex<float> *B, const int bs0, const int bs1,
+                   const std::complex<float> beta, std::complex<float> *C,
+                   const int cs0, const int cs1) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int ldb = (bs0 == 1 ? bs1 : bs0);
+    const int ldc = (cs0 == 1 ? cs1 : cs0);
+
+    cblas_cgemm(cblas_layout, Trans_TagToCblas(transa_tag),
+                Trans_TagToCblas(transb_tag), m, n, k, (const void *)&alpha,
+                (const void *)A, lda, (const void *)B, ldb, (const void *)&beta,
+                (void *)C, ldc);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+
+
 } // namespace Tines

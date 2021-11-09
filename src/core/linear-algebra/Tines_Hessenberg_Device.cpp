@@ -23,13 +23,13 @@ Sandia National Laboratories, New Mexico, USA
 namespace Tines {
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-  int HessenbergDevice<Kokkos::Serial>::invoke(
-    const Kokkos::Serial &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &A,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &Q,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &t,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &w,
-    const control_type &control ) {
+  template<typename RealType>
+  int HessenbergDeviceSerial
+  (const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &Q,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &t,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &w,
+   const control_type &control ) {
     ProfilingRegionScope region("Tines::HessenbergSerial");
     bool use_tpl_if_avail(true);
     {
@@ -38,7 +38,7 @@ namespace Tines {
     }
     const auto member = Tines::HostSerialTeamMember();
     const int iend = A.extent(0);
-    const double zero(0);
+    const RealType zero(0);
     for (int i = 0; i < iend; ++i) {
       const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
       const auto _Q = Kokkos::subview(Q, i, Kokkos::ALL(), Kokkos::ALL());
@@ -50,16 +50,37 @@ namespace Tines {
     }
     return 0;
   }
+  
+  int HessenbergDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &control ) {
+    return HessenbergDeviceSerial(A, Q, t, w, control);
+  }
+
+  int HessenbergDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &Q,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &t,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &control ) {
+    return HessenbergDeviceSerial(A, Q, t, w, control);
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-  int HessenbergDevice<Kokkos::OpenMP>::invoke(
-    const Kokkos::OpenMP &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &t,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
-    const control_type &control) {
+  template<typename RealType>
+  int HessenbergDeviceOpenMP
+  (const Kokkos::OpenMP &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &t,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+   const control_type &control) {
     ProfilingRegionScope region("Tines::HessenbergOpenMP");
     bool use_tpl_if_avail(true);
     {
@@ -71,7 +92,7 @@ namespace Tines {
     Kokkos::parallel_for(
       "Tines::HessenbergOpenMP::parallel_for", policy,
       [=](const typename policy_type::member_type &member) {
-        const double zero(0);
+        const RealType zero(0);
         const int i = member.league_rank();
         const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
         const auto _Q = Kokkos::subview(Q, i, Kokkos::ALL(), Kokkos::ALL());
@@ -83,17 +104,40 @@ namespace Tines {
         Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
       });
     return 0;
+  }  
+
+  int HessenbergDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &control) {
+    return HessenbergDeviceOpenMP(exec_instance,
+				  A, Q, t, w, control);
+  }
+
+  int HessenbergDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &Q,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &t,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &control) {
+    return HessenbergDeviceOpenMP(exec_instance,
+				  A, Q, t, w, control);
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  int HessenbergDevice<Kokkos::Cuda>::invoke(
-    const Kokkos::Cuda &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &A,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &Q,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &t,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &w,
-    const control_type & control) {
+  template<typename RealType>
+  int HessenbergDeviceCuda
+  (const Kokkos::Cuda &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &Q,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &t,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+   const control_type & control) {
     ProfilingRegionScope region("Tines::HessenbergCuda");
 
     /// default
@@ -135,7 +179,7 @@ namespace Tines {
     Kokkos::parallel_for(
       "Tines::HessenbergCuda::parallel_for", policy,
       KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
-        const double zero(0);
+        const RealType zero(0);
         const int i = member.league_rank();
         const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
         const auto _Q = Kokkos::subview(Q, i, Kokkos::ALL(), Kokkos::ALL());
@@ -145,10 +189,31 @@ namespace Tines {
         Tines::HessenbergFormQ::invoke(member, _A, _t, _Q, _w);
         Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
       });
-
-    
     return 0;
   }
+
+  int HessenbergDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type & control) {
+    return HessenbergDeviceCuda(exec_instance,
+				A, Q, t, w, control);
+  }
+
+  int HessenbergDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &Q,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &t,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type & control) {
+    return HessenbergDeviceCuda(exec_instance,
+				A, Q, t, w, control);
+  }  
 #endif
 
+  
 } // namespace Tines

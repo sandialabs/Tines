@@ -23,15 +23,14 @@ Sandia National Laboratories, New Mexico, USA
 namespace Tines {
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Serial>::invoke(
-    const Kokkos::Serial &,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::Serial>::type> &A,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &er,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &ei,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::Serial>::type> &V,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &w,
-    const control_type &control) {
-
+  template<typename RealType>
+  int SolveEigenvaluesNonSymmetricProblemDeviceSerial
+  (const value_type_3d_view<RealType, UseThisDevice<Kokkos::Serial>::type> &A,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Serial>::type> &er,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Serial>::type> &ei,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::Serial>::type> &V,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Serial>::type> &w,
+   const control_type &control) {
     ProfilingRegionScope region("Tines::SolveEigenvaluesNonSymmetricProbelmSerial");
     bool use_tpl_if_avail(true);
     {
@@ -58,13 +57,13 @@ namespace Tines {
       if (sort_eigen_pairs) {
 	using device_type = typename UseThisDevice<Kokkos::Serial>::type;
 	const int m = _er.extent(0);
-	double * wptr = _w.data();
+	RealType * wptr = _w.data();
 	const auto _p = value_type_1d_view<int, device_type>((int*)wptr, m); wptr += _p.span();
-	const auto _w_p = value_type_1d_view<double, device_type>(wptr, 2*m); wptr += _w_p.span();
+	const auto _w_p = value_type_1d_view<RealType, device_type>(wptr, 2*m); wptr += _w_p.span();
 
 	ComputeSortingIndices ::invoke(member, _er, _ei, _p, _w_p);
 
-	const auto _e_copy = value_type_1d_view<double, device_type>(wptr, m); wptr += _e_copy.span();
+	const auto _e_copy = value_type_1d_view<RealType, device_type>(wptr, m); wptr += _e_copy.span();
 	Copy ::invoke(member, _er, _e_copy);
 	ApplyPermutation<Side::Right,Trans::Transpose>
 	  ::invoke(member, _p, _e_copy, _er);
@@ -73,7 +72,7 @@ namespace Tines {
 	ApplyPermutation<Side::Right,Trans::Transpose>
 	  ::invoke(member, _p, _e_copy, _ei);
 
-	const auto _w_V = value_type_2d_view<double, device_type>(_w_p.data(), m, m);
+	const auto _w_V = value_type_2d_view<RealType, device_type>(_w_p.data(), m, m);
 	Copy ::invoke(member, _V, _w_V);
 	ApplyPermutation<Side::Right,Trans::Transpose>
 	  ::invoke(member, _p, _w_V, _V);
@@ -81,17 +80,40 @@ namespace Tines {
     }
     return 0;
   }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::Serial>::type> &A,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &er,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &ei,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::Serial>::type> &V,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceSerial(A, er, ei, V, w, control);
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::Serial>::type> &A,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Serial>::type> &er,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Serial>::type> &ei,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::Serial>::type> &V,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceSerial(A, er, ei, V, w, control);
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::OpenMP>::invoke(
-    const Kokkos::OpenMP &exec_instance,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &A,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &er,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &ei,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &V,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &w,
-    const control_type &control) {
+  template<typename RealType>
+  int SolveEigenvaluesNonSymmetricProblemDeviceOpenMP
+  (const Kokkos::OpenMP &exec_instance,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::OpenMP>::type> &A,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::OpenMP>::type> &er,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::OpenMP>::type> &ei,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::OpenMP>::type> &V,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::OpenMP>::type> &w,
+   const control_type &control) {
     ProfilingRegionScope region("Tines::SolveEigenvaluesNonSymmetricProbelmOpenMP");
     bool use_tpl_if_avail(true);
     {
@@ -123,13 +145,13 @@ namespace Tines {
 	if (sort_eigen_pairs) {
 	  using device_type = typename UseThisDevice<Kokkos::OpenMP>::type;
 	  const int m = _er.extent(0);
-	  double * wptr = _w.data();
+	  RealType * wptr = _w.data();
 	  const auto _p = value_type_1d_view<int, device_type>((int*)wptr, m); wptr += _p.span();
-	  const auto _w_p = value_type_1d_view<double, device_type>(wptr, 2*m); wptr += _w_p.span();
+	  const auto _w_p = value_type_1d_view<RealType, device_type>(wptr, 2*m); wptr += _w_p.span();
 
 	  ComputeSortingIndices ::invoke(member, _er, _ei, _p, _w_p);
 
-	  const auto _e_copy = value_type_1d_view<double, device_type>(wptr, m); wptr += _e_copy.span();
+	  const auto _e_copy = value_type_1d_view<RealType, device_type>(wptr, m); wptr += _e_copy.span();
 	  Copy ::invoke(member, _er, _e_copy);
 	  ApplyPermutation<Side::Right,Trans::Transpose>
 	    ::invoke(member, _p, _e_copy, _er);
@@ -138,7 +160,7 @@ namespace Tines {
 	  ApplyPermutation<Side::Right,Trans::Transpose>
 	    ::invoke(member, _p, _e_copy, _ei);
 
-	  const auto _w_V = value_type_2d_view<double, device_type>(_w_p.data(), m, m);
+	  const auto _w_V = value_type_2d_view<RealType, device_type>(_w_p.data(), m, m);
 	  Copy ::invoke(member, _V, _w_V);
 	  ApplyPermutation<Side::Right,Trans::Transpose>
 	    ::invoke(member, _p, _w_V, _V);
@@ -147,17 +169,42 @@ namespace Tines {
       });
     return 0;
   }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &A,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &er,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &ei,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &V,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceOpenMP
+      (exec_instance, A, er, ei, V, w, control);
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::OpenMP>::type> &A,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::OpenMP>::type> &er,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::OpenMP>::type> &ei,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::OpenMP>::type> &V,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceOpenMP
+      (exec_instance, A, er, ei, V, w, control);
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Cuda>::invoke(
-    const Kokkos::Cuda &exec_instance,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::Cuda>::type> &A,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &er,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &ei,
-    const value_type_3d_view<double, UseThisDevice<Kokkos::Cuda>::type> &V,
-    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &w,
-    const control_type &control) {
+  template<typename RealType>
+  int SolveEigenvaluesNonSymmetricProblemDeviceCuda
+  (const Kokkos::Cuda &exec_instance,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::Cuda>::type> &A,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Cuda>::type> &er,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Cuda>::type> &ei,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::Cuda>::type> &V,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::Cuda>::type> &w,
+   const control_type &control) {
     ProfilingRegionScope region("Tines::SolveEigenvaluesNonSymmetricProblemCuda");
     {
       // bool use_tpl_if_avail(true);
@@ -178,28 +225,28 @@ namespace Tines {
       using device_type = typename UseThisDevice<exec_space>::type;
       using host_device_type = typename UseThisDevice<host_space>::type;
 
-      double *wptr = w.data();
+      RealType *wptr = w.data();
       int wlen = w.span();
-      value_type_3d_view<double, device_type> Z(wptr, np, m, m);
+      value_type_3d_view<RealType, device_type> Z(wptr, np, m, m);
       wptr += Z.span(); wlen -= Z.span();
       TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
 
-      value_type_2d_view<double, device_type> t(wptr, np, m);
+      value_type_2d_view<RealType, device_type> t(wptr, np, m);
       wptr += t.span(); wlen -= t.span();
       TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
 
-      value_type_2d_view<double, device_type> w(wptr, np, m);
+      value_type_2d_view<RealType, device_type> w(wptr, np, m);
       wptr += w.span(); wlen -= w.span();
       TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
 
-      value_type_1d_view<double, host_device_type>
+      value_type_1d_view<RealType, host_device_type>
 	mirror(do_not_init_tag("mirror_space"), 2*np*m*m + 3*np*m);
 
-      double * mptr = mirror.data();
-      value_type_3d_view<double,host_device_type> A_host(mptr, A.extent(0), A.extent(1), A.extent(2)); mptr += A_host.span();
-      value_type_3d_view<double,host_device_type> Z_host(mptr, Z.extent(0), Z.extent(1), Z.extent(2)); mptr += Z_host.span();
-      value_type_2d_view<double,host_device_type> er_host(mptr, er.extent(0), er.extent(1)); mptr += er_host.span();
-      value_type_2d_view<double,host_device_type> ei_host(mptr, ei.extent(0), ei.extent(1)); mptr += ei_host.span();
+      RealType * mptr = mirror.data();
+      value_type_3d_view<RealType,host_device_type> A_host(mptr, A.extent(0), A.extent(1), A.extent(2)); mptr += A_host.span();
+      value_type_3d_view<RealType,host_device_type> Z_host(mptr, Z.extent(0), Z.extent(1), Z.extent(2)); mptr += Z_host.span();
+      value_type_2d_view<RealType,host_device_type> er_host(mptr, er.extent(0), er.extent(1)); mptr += er_host.span();
+      value_type_2d_view<RealType,host_device_type> ei_host(mptr, ei.extent(0), ei.extent(1)); mptr += ei_host.span();
 
       value_type_2d_view<int, device_type> b((int *)t.data(), np, m);
       value_type_2d_view<int, host_device_type> b_host((int*)mptr, b.extent(0), b.extent(1)); mptr += b_host.span();
@@ -209,7 +256,7 @@ namespace Tines {
       Kokkos::deep_copy(exec_instance, Z_host, Z);
 
       using policy_type = Kokkos::TeamPolicy<host_space>;
-      using scratch_type = ScratchViewType<value_type_1d_view<double, UseThisDevice<host_space>::type>>;
+      using scratch_type = ScratchViewType<value_type_1d_view<RealType, UseThisDevice<host_space>::type>>;
       const int level = 0, per_team_scratch = scratch_type::shmem_size(2 * m * m);
 
       policy_type policy(np, 1);
@@ -221,8 +268,8 @@ namespace Tines {
 	   const int p = member.league_rank();
 	   scratch_type work(member.team_scratch(level), 2 * m * m);
 
-	   double *__restrict__ _A = work.data();
-	   double *__restrict__ _Z = work.data() + m * m;
+	   RealType *__restrict__ _A = work.data();
+	   RealType *__restrict__ _Z = work.data() + m * m;
 
 	   /// change data column major
 	   for (int i = 0; i < m; ++i)
@@ -247,7 +294,7 @@ namespace Tines {
       Kokkos::deep_copy(exec_instance, Z, Z_host);
       Kokkos::deep_copy(exec_instance, b, b_host);
 
-      value_type_3d_view<double, device_type> U(wptr, np, m, m);
+      value_type_3d_view<RealType, device_type> U(wptr, np, m, m);
       wptr += U.span();
       wlen -= U.span();
       TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
@@ -255,7 +302,7 @@ namespace Tines {
       RightEigenvectorSchurDevice<exec_space>
 	::invoke(exec_instance, A, b, U, w, control);
 
-      const double one(1), zero(0);
+      const RealType one(1), zero(0);
       GemmDevice<Trans::NoTranspose, Trans::NoTranspose, exec_space>
 	::invoke(exec_instance, one, Z, U, zero, V, control);
 
@@ -264,7 +311,7 @@ namespace Tines {
 	{
           using policy_type = Kokkos::TeamPolicy<host_space>;
 
-          value_type_2d_view<double, host_device_type> w_host(A_host.data(), np, 2*m);
+          value_type_2d_view<RealType, host_device_type> w_host(A_host.data(), np, 2*m);
           policy_type policy(np, 1);
           Kokkos::parallel_for
             ("Tines::ComputeSortingIndicesHost",
@@ -350,7 +397,34 @@ namespace Tines {
     }
     return 0;
   }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &er,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &ei,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::Cuda>::type> &V,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceCuda
+      (exec_instance, A, er, ei, V, w, control);
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Cuda>::type> &er,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Cuda>::type> &ei,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::Cuda>::type> &V,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceCuda
+      (exec_instance, A, er, ei, V, w, control);
+  }
 #endif
+
+  /// float
+    
 
 } // namespace Tines
 

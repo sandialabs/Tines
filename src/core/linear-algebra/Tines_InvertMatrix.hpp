@@ -33,6 +33,9 @@ namespace Tines {
   int InvertMatrix_HostTPL(const int m, double *A, const int as0, const int as1,
                            int *ipiv, double *B, const int bs0, const int bs1);
 
+  int InvertMatrix_HostTPL(const int m, float *A, const int as0, const int as1,
+                           int *ipiv, float *B, const int bs0, const int bs1);
+
   struct InvertMatrix {
     template <typename MemberType, typename AViewType, typename BViewType,
               typename WViewType>

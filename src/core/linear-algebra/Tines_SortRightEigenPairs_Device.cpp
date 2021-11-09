@@ -23,13 +23,12 @@ Sandia National Laboratories, New Mexico, USA
 namespace Tines {
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-  int SortRightEigenPairsDevice<Kokkos::Serial>::
-  invoke(const Kokkos::Serial &exec_instance,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &er,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &ei,
-         const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W,
-	 const control_type &) {
+  template<typename RealType>
+  int SortRightEigenPairsDeviceSerial
+  (const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &er,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &ei,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &W) {
     ProfilingRegionScope region("Tines::SortRightEigenPairsSerial");
 
     const int np = er.extent(0), m = er.extent(1);
@@ -39,9 +38,9 @@ namespace Tines {
 
       TINES_CHECK_ERROR(workspace < workspace_required, "Workspace is smaller than the required m*max(3,m) where m is the dimension of the system");
     }
-    double * buf = W.data();
+    RealType * buf = W.data();
     int * pptr = (int*)buf; buf += m;
-    double * wptr = buf;
+    RealType * wptr = buf;
 
     const auto member = Tines::HostSerialTeamMember();
     for (int i = 0; i < np; ++i) {
@@ -49,7 +48,7 @@ namespace Tines {
       const auto _ei = Kokkos::subview(ei, i, Kokkos::ALL());
       const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
 
-      double * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data();
+      RealType * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data();
       const int ers = _er.stride(0), eis = _ei.stride(0),
         vs0 = _V.stride(0), vs1 = _V.stride(1);
 
@@ -91,19 +90,41 @@ namespace Tines {
                  wptr, 1, m,
                  vptr, vs1, vs0);
     }
-
-    
     return 0;
   }
+
+  int SortRightEigenPairsDevice<Kokkos::Serial>::
+  invoke(const Kokkos::Serial &,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &er,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &ei,
+         const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W,
+	 const control_type &) {
+    return SortRightEigenPairsDeviceSerial
+      (er, ei, V, W);
+  }
+
+  int SortRightEigenPairsDevice<Kokkos::Serial>::
+  invoke(const Kokkos::Serial &,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &er,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &ei,
+         const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &V,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &W,
+	 const control_type &) {
+    return SortRightEigenPairsDeviceSerial
+      (er, ei, V, W);
+  }
+  
 #endif
+
 #if defined(KOKKOS_ENABLE_OPENMP)
-  int SortRightEigenPairsDevice<Kokkos::OpenMP>::
-  invoke(const Kokkos::OpenMP &exec_instance,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
-         const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
-	 const control_type & control) {
+  template<typename RealType>
+  int SortRightEigenPairsDeviceOpenMP
+  (const Kokkos::OpenMP &exec_instance,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &W) {
     ProfilingRegionScope region("Tines::SortRightEigenPairsOpenMP");
 
     const int np = er.extent(0), m = er.extent(1);
@@ -124,7 +145,7 @@ namespace Tines {
         const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
         const auto _W  = Kokkos::subview(W,  i, Kokkos::ALL());
 
-        double * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
+        RealType * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
         int * pptr = (int*)_W.data();
         const int ers = _er.stride(0), eis = _ei.stride(0), vs0 = _V.stride(0), vs1 = _V.stride(1);
 
@@ -170,15 +191,40 @@ namespace Tines {
     
     return 0;
   }
+
+  int SortRightEigenPairsDevice<Kokkos::OpenMP>::
+  invoke(const Kokkos::OpenMP &exec_instance,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
+         const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
+	 const control_type & ) {
+    return SortRightEigenPairsDeviceOpenMP
+      (exec_instance, er, ei, V, W);
+  }
+
+  int SortRightEigenPairsDevice<Kokkos::OpenMP>::
+  invoke(const Kokkos::OpenMP &exec_instance,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
+         const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
+	 const control_type & ) {
+    return SortRightEigenPairsDeviceOpenMP
+      (exec_instance, er, ei, V, W);
+  }
+
 #endif
+  
 #if defined(KOKKOS_ENABLE_CUDA)
-  int SortRightEigenPairsDevice<Kokkos::Cuda>::
-  invoke(const Kokkos::Cuda &exec_instance,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &er,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
-         const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
-         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W,
-	 const control_type &control) {
+  template<typename RealType>
+  int SortRightEigenPairsDeviceCuda
+  (const Kokkos::Cuda &exec_instance,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &er,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+   const control_type &control) {
     ProfilingRegionScope region("Tines::SortRightEigenPairsCuda");
 
     const int np = er.extent(0), m = er.extent(1);
@@ -206,7 +252,7 @@ namespace Tines {
 	  const auto _ei = Kokkos::subview(ei_host, i, Kokkos::ALL());
           const auto _W  = Kokkos::subview(W_host,  i, Kokkos::ALL());
 
-          double * erptr = _er.data(), * eiptr = _ei.data(), * wptr = _W.data() + m;
+          RealType * erptr = _er.data(), * eiptr = _ei.data(), * wptr = _W.data() + m;
           int * pptr = (int*)_W.data();
           const int ers = _er.stride(0), eis = _ei.stride(0);
 
@@ -271,7 +317,7 @@ namespace Tines {
 	  const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
 	  const auto _W  = Kokkos::subview(W,  i, Kokkos::ALL());
 	  
-	  double * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
+	  RealType * erptr = _er.data(), * eiptr = _ei.data(), * vptr = _V.data(), * wptr = _W.data() + m;
 	  int * pptr = (int*)_W.data();
 	  const int ers = _er.stride(0), eis = _ei.stride(0), vs0 = _V.stride(0), vs1 = _V.stride(1);
 	  
@@ -308,6 +354,28 @@ namespace Tines {
 	});
     }
     return 0;
+  }
+
+  int SortRightEigenPairsDevice<Kokkos::Cuda>::
+  invoke(const Kokkos::Cuda &exec_instance,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &er,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
+         const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+         const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+	 const control_type &control) {
+    return SortRightEigenPairsDeviceCuda
+      (exec_instance, er, ei, V, W, control);
+  }
+
+  int SortRightEigenPairsDevice<Kokkos::Cuda>::
+  invoke(const Kokkos::Cuda &exec_instance,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &er,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
+         const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+         const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+	 const control_type &control) {
+    return SortRightEigenPairsDeviceCuda
+      (exec_instance, er, ei, V, W, control);
   }
 #endif
 

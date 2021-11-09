@@ -30,6 +30,10 @@ namespace Tines {
                                     const int as0, const int as1, int *jpiv,
                                     double *tau, int &matrix_rank);
 
+  int QR_WithColumnPivoting_HostTPL(const int m, const int n, float *A,
+                                    const int as0, const int as1, int *jpiv,
+                                    float *tau, int &matrix_rank);
+
   struct QR_WithColumnPivoting {
     template <typename MemberType, typename AViewType, typename tViewType,
               typename pViewType, typename wViewType>

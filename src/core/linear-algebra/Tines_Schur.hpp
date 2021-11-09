@@ -30,6 +30,10 @@ namespace Tines {
                     double *Z, const int zs0, const int zs1, double *er,
                     double *ei, int *b, const int bs);
 
+  int Schur_HostTPL(const int m, float *H, const int hs0, const int hs1,
+                    float *Z, const int zs0, const int zs1, float *er,
+                    float *ei, int *b, const int bs);
+
   struct Schur {
     template <typename MemberType, typename HViewType, typename ZViewType,
               typename EViewType, typename BViewType>

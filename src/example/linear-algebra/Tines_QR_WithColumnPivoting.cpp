@@ -19,23 +19,12 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
-#if defined(TINES_TEST_VIEW_INTERFACE)
-  std::cout << "QR_WithColumnPivoting testing View interface\n";
-#elif defined(TINES_TEST_TPL_POINTER_INTERFACE)
-  std::cout << "QR_WithColumnPivoting testing Pointer interface\n";
-#else
-  throw std::logic_error("Error: TEST macro is not defined");
-#endif
-
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_memory_space = Kokkos::HostSpace;
-    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
+    printTestInfo("QR with column pivoting");
 
     using ats = Tines::ats<real_type>;
     using Side = Tines::Side;
@@ -93,11 +82,11 @@ int main(int argc, char **argv) {
     {
       const int mm = A.extent(0), nn = A.extent(1);
 
-      double *Aptr = A.data();
+      real_type *Aptr = A.data();
       const int as0 = A.stride(0), as1 = A.stride(1);
 
       int *jpiv = (int *)p.data();
-      double *tau = (double *)t.data();
+      real_type *tau = (real_type *)t.data();
       Tines::QR_WithColumnPivoting_HostTPL(mm, nn, Aptr, as0, as1, jpiv, tau,
                                            matrix_rank);
     }

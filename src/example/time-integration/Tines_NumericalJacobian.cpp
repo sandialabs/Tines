@@ -21,15 +21,13 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines.hpp"
 #include "Tines_ProblemTestSimple.hpp"
 
+#include "Tines_TestUtils.hpp"
+
 int main(int argc, char *argv[]) {
 
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_memory_space = Kokkos::HostSpace;
-    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
+    printTestInfo("Numerical Jacobian");
 
     using ats = Tines::ats<real_type>;
     using problem_type = Tines::ProblemTestSimple<real_type, host_device_type>;

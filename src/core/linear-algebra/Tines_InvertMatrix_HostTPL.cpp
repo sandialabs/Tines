@@ -78,4 +78,56 @@ namespace Tines {
     return -1;
 #endif
   }
+
+  //
+  int InvertMatrix_HostTPL(const int m, float *A, const int as0, const int as1,
+                           int *ipiv, float *B, const int bs0, const int bs1) {
+#if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto lapack_layout = as0 == 1 ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR;
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int ldb = (bs0 == 1 ? bs1 : bs0);
+
+    const float one(1), zero(0);
+
+    int info(0);
+
+    /// factorize lu with partial pivoting
+    info = LAPACKE_sgetrf(lapack_layout, m, m, (float *)A, lda, (int *)ipiv);
+    if (info) {
+      printf("Error: dgetrf returns with nonzero info %d\n", info);
+      throw std::runtime_error("Error: dgetrf fails");
+    }
+
+    /// set B identity
+    for (int i = 0; i < m; ++i)
+      for (int j = 0; j < m; ++j)
+        B[i * bs0 + j * bs1] = (i == j ? one : zero);
+
+    /// apply pivot
+    for (int i = 0; i < m; ++i) {
+      const int p = ipiv[i] - 1;
+      for (int j = 0; j < m; ++j) {
+        const int src = i * bs0 + j * bs1, tgt = p * bs0 + j * bs1;
+        const float tmp = B[src];
+        B[src] = B[tgt];
+        B[tgt] = tmp;
+      }
+    }
+
+    /// solve trsm
+    cblas_strsm(cblas_layout, CblasLeft, CblasLower, CblasNoTrans, CblasUnit, m,
+                m, one, A, lda, B, ldb);
+    cblas_strsm(cblas_layout, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit,
+                m, m, one, A, lda, B, ldb);
+
+    return info;
+#else
+    TINES_CHECK_ERROR(true, "Error: LAPACKE and/or OpenBLAS are not enabled\n");
+    return -1;
+#endif
+  }
+  
 } // namespace Tines

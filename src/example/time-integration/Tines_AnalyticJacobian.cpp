@@ -22,16 +22,15 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines.hpp"
 #include "Tines_ProblemTestSacadoSimple.hpp"
 
+#include "Tines_TestUtils.hpp"
+
 int main(int argc, char *argv[]) {
 
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-    using fad_type = Sacado::Fad::SLFad<real_type, 10>;
+    printTestInfo("Analytic Jacobian via SLFad");
 
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_memory_space = Kokkos::HostSpace;
-    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
+    using fad_type = Sacado::Fad::SLFad<real_type, 10>;
 
     using ats = Tines::ats<real_type>;
     using problem_type =

@@ -89,4 +89,67 @@ namespace Tines {
 #endif
   }
 
+  ///
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const float alpha, const float *A, const int as0,
+                   const int as1, const float *x, const int xs0,
+                   const float beta, float *y, const int ys0) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+
+    cblas_sgemv(cblas_layout, Trans_TagToCblas(trans_tag), m, n, alpha, A, lda,
+                x, xs0, beta, y, ys0);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const Kokkos::complex<float> alpha,
+                   const Kokkos::complex<float> *A, const int as0,
+                   const int as1, const Kokkos::complex<float> *x,
+                   const int xs0, const Kokkos::complex<float> beta,
+                   Kokkos::complex<float> *y, const int ys0) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+
+    cblas_cgemv(cblas_layout, Trans_TagToCblas(trans_tag), m, n,
+                (const void *)&alpha, (const void *)A, lda, (const void *)x,
+                xs0, (const void *)&beta, (void *)y, ys0);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const std::complex<float> alpha,
+                   const std::complex<float> *A, const int as0, const int as1,
+                   const std::complex<float> *x, const int xs0,
+                   const std::complex<float> beta, std::complex<float> *y,
+                   const int ys0) {
+#if defined(TINES_ENABLE_TPL_CBLAS_ON_HOST)
+    const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+    const int lda = (as0 == 1 ? as1 : as0);
+
+    cblas_cgemv(cblas_layout, Trans_TagToCblas(trans_tag), m, n,
+                (const void *)&alpha, (const void *)A, lda, (const void *)x,
+                xs0, (const void *)&beta, (void *)y, ys0);
+    return 0;
+#else
+    TINES_CHECK_ERROR(true, "Error: CBLAS is not enabled");
+
+    return -1;
+#endif
+  }
+
+  
+
 } // namespace Tines

@@ -29,6 +29,9 @@ namespace Tines {
   int Hessenberg_HostTPL(const int m, double *A, const int as0, const int as1,
                          double *tau);
 
+  int Hessenberg_HostTPL(const int m, float *A, const int as0, const int as1,
+                         float *tau);
+
   struct Hessenberg {
     template <typename MemberType, typename AViewType, typename tViewType,
               typename wViewType>

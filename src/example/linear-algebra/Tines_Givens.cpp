@@ -19,23 +19,12 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
-#if defined(TINES_TEST_VIEW_INTERFACE)
-  std::cout << "Givens testing View interface\n";
-#elif defined(TINES_TEST_TPL_POINTER_INTERFACE)
-  std::cout << "Givens testing Pointer interface\n";
-#else
-  throw std::logic_error("Error: TEST macro is not defined");
-#endif
-
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_memory_space = Kokkos::HostSpace;
-    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
+    printTestInfo("Givens");
 
     using ats = Tines::ats<real_type>;
     using Trans = Tines::Trans;
@@ -70,12 +59,5 @@ int main(int argc, char **argv) {
   }
   Kokkos::finalize();
 
-#if defined(TINES_TEST_VIEW_INTERFACE)
-  std::cout << "Givens testing View interface\n";
-#elif defined(TINES_TEST_TPL_POINTER_INTERFACE)
-  std::cout << "Givens testing Pointer interface\n";
-#else
-  throw std::logic_error("Error: TEST macro is not defined");
-#endif
   return 0;
 }

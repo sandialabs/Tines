@@ -29,11 +29,15 @@ namespace Tines {
   int ComputeConditionNumber_HostTPL(const int m, double *A, const int as0,
                                      const int as1, int *ipiv, double &cond);
 
+  int ComputeConditionNumber_HostTPL(const int m, float *A, const int as0,
+                                     const int as1, int *ipiv, float &cond);
+
   struct ComputeConditionNumber {
     template <typename MemberType, typename AViewType, typename WViewType>
     KOKKOS_INLINE_FUNCTION static int
     device_invoke(const MemberType &member, const AViewType &A,
-                  const WViewType &W, double &cond) {
+                  const WViewType &W,
+		  const typename WViewType::non_const_value_type &cond) {
       // static_assert(AViewType::rank == 2, "A is not rank-2 view");
       // static_assert(WViewType::rank == 1, "W is not rank-1 view");
 
@@ -61,7 +65,8 @@ namespace Tines {
     template <typename MemberType, typename AViewType, typename WViewType>
     KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member,
                                              const AViewType &A,
-                                             const WViewType &W, double &cond) {
+                                             const WViewType &W,
+					     typename WViewType::non_const_value_type &cond) {
       static_assert(AViewType::rank == 2, "A is not rank-2 view");
       static_assert(WViewType::rank == 1, "W is not rank-1 view");
 

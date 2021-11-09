@@ -35,6 +35,15 @@ namespace Tines {
     const int m, double *A, const int as0, const int as1, double *er,
     double *ei, double *UR, const int urs0, const int urs1);
 
+  int SolveEigenvaluesNonSymmetricProblem_HostTPL(
+    const int m, float *A, const int as0, const int as1, float *er,
+    float *ei, float *UL, const int uls0, const int uls1, float *UR,
+    const int urs0, const int urs1);
+
+  int SolveEigenvaluesNonSymmetricProblemWithRighteigenvectors_HostTPL(
+    const int m, float *A, const int as0, const int as1, float *er,
+    float *ei, float *UR, const int urs0, const int urs1);
+  
   struct SolveEigenvaluesNonSymmetricProblem {
     template <typename MemberType, typename AViewType, typename EViewType,
               typename UViewType, typename WViewType>

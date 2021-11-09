@@ -38,6 +38,18 @@ namespace Tines {
                   const int us0, const int us1, double *sigma,
                   int &matrix_rank);
 
+  /// forming orthogonal matrices explicitly
+  int UTV_HostTPL(const int m, const int n, float *A, const int as0,
+                  const int as1, int *jpiv, float *tau, float *U,
+                  const int us0, const int us1, float *V, const int vs0,
+                  const int vs1, int &matrix_rank);
+
+  /// orthogoanl matrices are stored as a seires of householder vectors
+  int UTV_HostTPL(const int m, const int n, float *A, const int as0,
+                  const int as1, int *jpiv, float *tau, float *U,
+                  const int us0, const int us1, float *sigma,
+                  int &matrix_rank);
+
   struct UTV {
 
     template <typename AViewType>

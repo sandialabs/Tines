@@ -43,6 +43,21 @@ namespace Tines {
                        const int xs1, double *b, const int bs0, const int bs1,
                        double *w);
 
+  int SolveUTV_HostTPL(const int m, const int n, const int matrix_rank,
+                       const float *U, const int us0, const int us1,
+                       const float *T, const int ts0, const int ts1,
+                       const float *V, const int vs0, const int vs1,
+                       const int *jpiv, float *x, const int xs0, float *b,
+                       const int bs0, float *w);
+
+  int SolveUTV_HostTPL(const int m, const int n, const int matrix_rank,
+                       const int nrhs, const float *U, const int us0,
+                       const int us1, const float *T, const int ts0,
+                       const int ts1, const float *V, const int vs0,
+                       const int vs1, const int *jpiv, float *x, const int xs0,
+                       const int xs1, float *b, const int bs0, const int bs1,
+                       float *w);
+
   struct SolveUTV {
     template <typename AViewType, typename BViewType>
     KOKKOS_INLINE_FUNCTION static int workspace(const AViewType &A,

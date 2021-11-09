@@ -26,14 +26,13 @@ Sandia National Laboratories, New Mexico, USA
 namespace Tines {
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Serial>::
-    invoke(
-      const Kokkos::Serial &exec_instance, const double alpha,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &A,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &B,
-      const double beta,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &C,
-      const control_type &) {
+  template<typename RealType>
+  int GemmDeviceNoTransNoTransSerial
+  (const RealType alpha,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &B,
+   const RealType beta,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &C) {
     ProfilingRegionScope region("Tines::GemmSerial");
     const auto member = Tines::HostSerialTeamMember();
     const int iend = A.extent(0);
@@ -45,19 +44,42 @@ namespace Tines {
       Tines::Gemm<Trans::NoTranspose, Trans::NoTranspose>::invoke(
         member, alpha, _A, _B, beta, _C);
     }
-    return 0;
+    return 0;    
+  }
+  
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Serial>::
+    invoke(
+      const Kokkos::Serial &, const double alpha,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &A,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &B,
+      const double beta,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &C,
+      const control_type &) {
+    return GemmDeviceNoTransNoTransSerial(alpha, A, B,
+					  beta, C);
+  }
+  
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Serial>::
+    invoke(
+      const Kokkos::Serial &, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &C,
+      const control_type &) {
+    return GemmDeviceNoTransNoTransSerial(alpha, A, B,
+					  beta, C);
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::OpenMP>::
-    invoke(
-      const Kokkos::OpenMP &exec_instance, const double alpha,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &B,
-      const double beta,
-      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &C,
-      const control_type &) {
+  template<typename RealType>
+  int GemmDeviceNoTransNoTransOpenMP
+  (const Kokkos::OpenMP &exec_instance, const RealType alpha,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &B,
+   const RealType beta,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &C) {
     ProfilingRegionScope region("Tines::GemmOpenMP");
     using policy_type = Kokkos::TeamPolicy<Kokkos::OpenMP>;
     policy_type policy(exec_instance, A.extent(0), 1);
@@ -74,16 +96,43 @@ namespace Tines {
       });
     return 0;
   }
+				     
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::OpenMP>::
+    invoke(
+      const Kokkos::OpenMP &exec_instance, const double alpha,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &B,
+      const double beta,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &C,
+      const control_type &) {
+    return GemmDeviceNoTransNoTransOpenMP(exec_instance,
+					  alpha, A, B,
+					  beta, C);
+  }
+
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::OpenMP>::
+    invoke(
+      const Kokkos::OpenMP &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &C,
+      const control_type &) {
+    return GemmDeviceNoTransNoTransOpenMP(exec_instance,
+					  alpha, A, B,
+					  beta, C);
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Cuda>::invoke(
-    const Kokkos::Cuda &exec_instance, const double alpha,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &A,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &B,
-    const double beta,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &C,
-    const control_type & control) {
+  template<typename RealType>
+  int GemmDeviceNoTransNoTransCuda
+  (const Kokkos::Cuda &exec_instance, const RealType alpha,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &B,
+   const RealType beta,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &C,
+   const control_type & control) {
     ProfilingRegionScope region("Tines::GemmCuda");
     {
       const int league_size = A.extent(0);
@@ -132,10 +181,34 @@ namespace Tines {
 	});
     }
     
-    return 0;
+    return 0;    
+  }
+  
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance, const double alpha,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &B,
+    const double beta,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &C,
+    const control_type & control) {
+    return GemmDeviceNoTransNoTransCuda(exec_instance,
+					alpha, A, B,
+					beta, C, control);    
+  }
+
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance, const float alpha,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &B,
+    const float beta,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &C,
+    const control_type & control) {
+    return GemmDeviceNoTransNoTransCuda(exec_instance,
+					alpha, A, B,
+					beta, C, control);    
   }
 #endif
-
+  
 } // namespace Tines
 
 

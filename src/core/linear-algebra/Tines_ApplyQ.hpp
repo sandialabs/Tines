@@ -30,6 +30,11 @@ namespace Tines {
                      const int n, const int k, const double *A, const int as0,
                      const int as1, const double *tau, double *B, const int bs0,
                      const int bs1);
+  
+  int ApplyQ_HostTPL(const int side_tag, const int trans_tag, const int m,
+                     const int n, const int k, const float *A, const int as0,
+                     const int as1, const float *tau, float *B, const int bs0,
+                     const int bs1);
 
   template <typename SideType, typename TransType> struct ApplyQ;
 

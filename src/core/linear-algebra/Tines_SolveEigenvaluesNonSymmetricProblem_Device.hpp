@@ -22,7 +22,7 @@ Sandia National Laboratories, New Mexico, USA
 #define __TINES_SOLVE_EIGENVALUES_NONSYMMETRIC_PROBLEM_DEVICE_HPP__
 
 namespace Tines {
-
+  /// double
   template <typename SpT> struct SolveEigenvaluesNonSymmetricProblemDevice {
     static int invoke(
       const SpT &exec_instance,
@@ -31,6 +31,18 @@ namespace Tines {
       const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &ei,
       const value_type_3d_view<double, typename UseThisDevice<SpT>::type> &V,
       const value_type_2d_view<double, typename UseThisDevice<SpT>::type> &W,
+      const control_type & control = control_type()) {
+      TINES_CHECK_ERROR(!ValidExecutionSpace<SpT>::value,
+                        "Error: the given execution space is not implemented");
+      return -1;
+    }
+    static int invoke(
+      const SpT &exec_instance,
+      const value_type_3d_view<float, typename UseThisDevice<SpT>::type> &A,
+      const value_type_2d_view<float, typename UseThisDevice<SpT>::type> &er,
+      const value_type_2d_view<float, typename UseThisDevice<SpT>::type> &ei,
+      const value_type_3d_view<float, typename UseThisDevice<SpT>::type> &V,
+      const value_type_2d_view<float, typename UseThisDevice<SpT>::type> &W,
       const control_type & control = control_type()) {
       TINES_CHECK_ERROR(!ValidExecutionSpace<SpT>::value,
                         "Error: the given execution space is not implemented");
@@ -48,6 +60,14 @@ namespace Tines {
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &W,
       const control_type & control = control_type());
+    static int invoke(
+      const Kokkos::Serial &exec_instance,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &A,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &er,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &ei,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &V,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &W,
+      const control_type & control = control_type());    
   };
 #endif
 #if defined(KOKKOS_ENABLE_OPENMP)
@@ -62,6 +82,14 @@ namespace Tines {
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
       const control_type & control = control_type());
+    static int invoke(
+      const Kokkos::OpenMP &exec_instance,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &er,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &ei,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &W,
+      const control_type & control = control_type());    
   };
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -74,8 +102,17 @@ namespace Tines {
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
       const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &W,
       const control_type & control = control_type());
+    static int invoke(
+      const Kokkos::Cuda &exec_instance,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &er,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &ei,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &W,
+      const control_type & control = control_type());    
   };
 #endif
+
 } // namespace Tines
 
 #endif

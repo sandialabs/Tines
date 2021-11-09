@@ -19,18 +19,12 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using exec_space = Kokkos::DefaultExecutionSpace;
-    using device_type = typename Tines::UseThisDevice<exec_space>::type;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_device_type =
-      typename Tines::UseThisDevice<host_exec_space>::type;
+    printTestInfo("HessenbergDevice");
 
     exec_space::print_configuration(std::cout, false);
 

@@ -88,4 +88,66 @@ namespace Tines {
 #endif
   }
 
+  ///
+  int SolveEigenvaluesNonSymmetricProblem_HostTPL(
+    const int m, float *A, const int as0, const int as1, float *er,
+    float *ei, float *UL, const int uls0, const int uls1, float *UR,
+    const int urs0, const int urs1) {
+#if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
+    const int lapack_layouts[2] = {LAPACK_ROW_MAJOR, LAPACK_COL_MAJOR};
+    const auto layout = lapack_layouts[as0 == 1];
+
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int uls = (as0 == 1 ? uls1 : uls0);
+    const int urs = (as0 == 1 ? urs1 : urs0);
+
+    if (as0 == 1) {
+      assert(uls0 == 1);
+      assert(urs0 == 1);
+    } else if (as1 == 1) {
+      assert(uls1 == 1);
+      assert(urs1 == 1);
+    }
+
+    const int r_val =
+      LAPACKE_sgeev(layout, 'V', 'V', m, (float *)A, lda, (float *)er,
+                    (float *)ei, (float *)UL, uls, (float *)UR, urs);
+    return r_val;
+#else
+    TINES_CHECK_ERROR(true, "Error: LAPACKE is not enabled");
+
+    return -1;
+#endif
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemWithRighteigenvectors_HostTPL(
+    const int m, float *A, const int as0, const int as1, float *er,
+    float *ei, float *UR, const int urs0, const int urs1) {
+#if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
+    const int lapack_layouts[2] = {LAPACK_ROW_MAJOR, LAPACK_COL_MAJOR};
+    const auto layout = lapack_layouts[as0 == 1];
+
+    const int lda = (as0 == 1 ? as1 : as0);
+    const int urs = (as0 == 1 ? urs1 : urs0);
+
+    if (as0 == 1) {
+      assert(urs0 == 1);
+    } else if (as1 == 1) {
+      assert(urs1 == 1);
+    }
+
+    const int r_val =
+      LAPACKE_sgeev(layout, 'N', 'V', m, (float *)A, lda, (float *)er,
+                    (float *)ei, (float *)nullptr, m, /// dummy
+                    (float *)UR, urs);
+    return r_val;
+#else
+    TINES_CHECK_ERROR(true, "Error: LAPACKE is not enabled");
+
+    return -1;
+#endif
+  }
+
+  
+
 } // namespace Tines

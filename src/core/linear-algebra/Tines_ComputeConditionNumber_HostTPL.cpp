@@ -65,4 +65,42 @@ namespace Tines {
     return -1;
 #endif
   }
+
+  int ComputeConditionNumber_HostTPL(const int m, float *A, const int as0,
+                                     const int as1, int *ipiv, float &cond) {
+#if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
+    const auto lapack_layout = as0 == 1 ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR;
+    /// const auto cblas_layout = as0 == 1 ? CblasColMajor : CblasRowMajor;
+
+    const int lda = (as0 == 1 ? as1 : as0);
+
+    int info(0);
+
+    /// factorize lu with partial pivoting
+    const char norm_type = '1';
+    const float norm = LAPACKE_slange(lapack_layout, norm_type, m, m, A, lda);
+
+    info = LAPACKE_sgetrf(lapack_layout, m, m, A, lda, ipiv);
+    if (info) {
+      printf("Error: dgetrf returns with nonzero info %d\n", info);
+      std::runtime_error("Error: dgetrf fails");
+    }
+
+    float rcond(0);
+    info = LAPACKE_sgecon(lapack_layout, norm_type, m, A, lda, norm, &rcond);
+    if (info) {
+      printf("Error: dgecon returns with nonzero info %d\n", info);
+      throw std::runtime_error("Error: dgecon fails");
+    }
+
+    const float one(1);
+    cond = one / rcond;
+
+    return info;
+#else
+    TINES_CHECK_ERROR(true, "Error: LAPACKE and/or OpenBLAS are not enabled\n");
+    return -1;
+#endif
+  }
+
 } // namespace Tines

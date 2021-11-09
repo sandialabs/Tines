@@ -36,6 +36,17 @@ namespace Tines {
                         "Error: the given execution space is not implemented");
       return -1;
     }
+    inline static int invoke(
+      const SpT &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<SpT>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<SpT>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<SpT>::type> &C,
+      const control_type & contorl = control_type()) {
+      TINES_CHECK_ERROR(!ValidExecutionSpace<SpT>::value,
+                        "Error: the given execution space is not implemented");
+      return -1;
+    }
   };
 
 #if defined(KOKKOS_ENABLE_SERIAL)
@@ -47,6 +58,13 @@ namespace Tines {
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &B,
       const double beta,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &C,
+      const control_type & contorl = control_type());
+    static int invoke(
+      const Kokkos::Serial &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &C,
       const control_type & contorl = control_type());
   };
 #endif
@@ -60,6 +78,13 @@ namespace Tines {
       const double beta,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &C,
       const control_type & contorl = control_type());
+    static int invoke(
+      const Kokkos::OpenMP &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &C,
+      const control_type & contorl = control_type());
   };
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -71,6 +96,13 @@ namespace Tines {
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &B,
       const double beta,
       const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &C,
+      const control_type & contorl = control_type());
+    static int invoke(
+      const Kokkos::Cuda &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &C,
       const control_type & contorl = control_type());
   };
 #endif

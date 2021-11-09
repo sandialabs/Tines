@@ -19,25 +19,19 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using exec_space = Kokkos::DefaultExecutionSpace;
-    using device_type = typename Tines::UseThisDevice<exec_space>::type;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_device_type =
-      typename Tines::UseThisDevice<host_exec_space>::type;
-
+    printTestInfo("GemmDevice");
+    
     exec_space::print_configuration(std::cout, false);
 
     using ats = Tines::ats<real_type>;
     using Trans = Tines::Trans;
 
-    const int np = 10000, m = 10;
+    const ordinal_type np = 10000, m = 10;
     Tines::value_type_3d_view<real_type, device_type> A("A", np, m, m);
     Tines::value_type_3d_view<real_type, device_type> B("B", np, m, m);
     Tines::value_type_3d_view<real_type, device_type> C("C", np, m, m);
@@ -76,10 +70,10 @@ int main(int argc, char **argv) {
     }
     printf("Time per host problem %e (s), %e (gflop)\n", t_gemm / double(np), flops/t_gemm_host); 
 
-    for (int p=0;p<np;++p) {
+    for (ordinal_type p=0;p<np;++p) {
       real_type err(0);
-      for (int i=0;i<m;++i)
-        for (int j=0;j<m;++j) {
+      for (ordinal_type i=0;i<m;++i)
+        for (ordinal_type j=0;j<m;++j) {
           const real_type diff = ats::abs(CC(p,i,j) - C_host(p,i,j));
           err += diff*diff;
         }

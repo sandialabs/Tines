@@ -38,6 +38,12 @@ namespace Tines {
                                 double *B, const int bs0, const int bs1,
                                 double *W, const int wlen, int &matrix_rank,
                                 const bool solve_only = false);
+  int SolveLinearSystem_HostTPL(const int m, const int n, const int nrhs,
+                                float *A, const int as0, const int as1,
+                                float *X, const int xs0, const int xs1,
+                                float *B, const int bs0, const int bs1,
+                                float *W, const int wlen, int &matrix_rank,
+                                const bool solve_only = false);
 
   /// Kokkos view interface
   struct SolveLinearSystem {

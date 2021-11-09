@@ -19,16 +19,14 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
+
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_memory_space = Kokkos::HostSpace;
-    using host_device_type = Kokkos::Device<host_exec_space, host_memory_space>;
-
+    printTestInfo info("EigenvalueSchur");
+    
     using ats = Tines::ats<real_type>;
     using Side = Tines::Side;
     using Trans = Tines::Trans;
@@ -36,7 +34,7 @@ int main(int argc, char **argv) {
     using Diag = Tines::Diag;
 
     std::string filename;
-    int m = 12;
+    ordinal_type m = 12;
     Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> A("A", m,
                                                                         m);
     if (argc == 2) {
@@ -50,7 +48,7 @@ int main(int argc, char **argv) {
                                                                         m);
     Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> eig("eig",
                                                                           m, 2);
-    Kokkos::View<int *, Kokkos::LayoutRight, host_device_type> b("b", m);
+    Kokkos::View<ordinal_type *, Kokkos::LayoutRight, host_device_type> b("b", m);
     Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> t("t", m);
     Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> w("w", m);
 
@@ -75,7 +73,7 @@ int main(int argc, char **argv) {
     /// A = Q T Q^H
     auto er = Kokkos::subview(eig, Kokkos::ALL(), 0);
     auto ei = Kokkos::subview(eig, Kokkos::ALL(), 1);
-    const int r_val = Tines::Schur::invoke(member, A, Q, er, ei, b);
+    const ordinal_type r_val = Tines::Schur::invoke(member, A, Q, er, ei, b);
     if (r_val == 0) {
       Tines::showMatrix("A (after Schur)", A);
 
@@ -91,5 +89,6 @@ int main(int argc, char **argv) {
     }
   }
   Kokkos::finalize();
+
   return 0;
 }

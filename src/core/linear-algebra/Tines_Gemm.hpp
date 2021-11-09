@@ -48,6 +48,28 @@ namespace Tines {
                    const std::complex<double> beta, std::complex<double> *C,
                    const int cs0, const int cs1);
 
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k, const float alpha,
+                   const float *A, const int as0, const int as1,
+                   const float *B, const int bs0, const int bs1,
+                   const float beta, float *C, const int cs0, const int cs1);
+
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k,
+                   const Kokkos::complex<float> alpha,
+                   const Kokkos::complex<float> *A, const int as0,
+                   const int as1, const Kokkos::complex<float> *B,
+                   const int bs0, const int bs1,
+                   const Kokkos::complex<float> beta,
+                   Kokkos::complex<float> *C, const int cs0, const int cs1);
+
+  int Gemm_HostTPL(const int transa_tag, const int transb_tag, const int m,
+                   const int n, const int k, const std::complex<float> alpha,
+                   const std::complex<float> *A, const int as0, const int as1,
+                   const std::complex<float> *B, const int bs0, const int bs1,
+                   const std::complex<float> beta, std::complex<float> *C,
+                   const int cs0, const int cs1);
+
   template <typename ArgTransA, typename ArgTransB> struct Gemm {
     template <typename MemberType, typename ScalarType, typename AViewType,
               typename BViewType, typename CViewType>

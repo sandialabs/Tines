@@ -21,15 +21,14 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines.hpp"
 
 namespace Tines {
-
+  /// double
 #if defined(KOKKOS_ENABLE_SERIAL)
-  int RightEigenvectorSchurDevice<Kokkos::Serial>::invoke(
-    const Kokkos::Serial &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &T,
-    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Serial>::type> &b,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &w,
-    const control_type &) {
+  template<typename RealType>
+  int RightEigenvectorSchurDeviceSerial
+  (const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &T,
+   const value_type_2d_view<int, typename UseThisDevice<Kokkos::Serial>::type> &b,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Serial>::type> &w) {
     ProfilingRegionScope region("Tines::RightEigenvectorSchurSerial");
     const auto member = Tines::HostSerialTeamMember();
     const int iend = T.extent(0);
@@ -43,16 +42,36 @@ namespace Tines {
     }    
     return 0;
   }
+
+  int RightEigenvectorSchurDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Serial>::type> &b,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &V,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &) {
+    return RightEigenvectorSchurDeviceSerial(T, b, V, w);
+  }
+
+  int RightEigenvectorSchurDevice<Kokkos::Serial>::invoke(
+    const Kokkos::Serial &,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Serial>::type> &b,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &V,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Serial>::type> &w,
+    const control_type &) {
+    return RightEigenvectorSchurDeviceSerial(T, b, V, w);
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-  int RightEigenvectorSchurDevice<Kokkos::OpenMP>::invoke(
-    const Kokkos::OpenMP &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &T,
-    const value_type_2d_view<int, typename UseThisDevice<Kokkos::OpenMP>::type> &b,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
-    const control_type &) {
+  template<typename RealType>
+  int RightEigenvectorSchurDeviceOpenMP
+  (const Kokkos::OpenMP &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &T,
+   const value_type_2d_view<int, typename UseThisDevice<Kokkos::OpenMP>::type> &b,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::OpenMP>::type> &w) {
     ProfilingRegionScope region("Tines::RightEigenvectorSchurOpenMP");
     using policy_type = Kokkos::TeamPolicy<Kokkos::OpenMP>;
     policy_type policy(exec_instance, T.extent(0), 1);
@@ -69,16 +88,39 @@ namespace Tines {
       });
     return 0;
   }
+
+  int RightEigenvectorSchurDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::OpenMP>::type> &b,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &) {
+    return RightEigenvectorSchurDeviceOpenMP(exec_instance,
+					     T, b, V, w);
+  }  
+
+  int RightEigenvectorSchurDevice<Kokkos::OpenMP>::invoke(
+    const Kokkos::OpenMP &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::OpenMP>::type> &b,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &V,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::OpenMP>::type> &w,
+    const control_type &) {
+    return RightEigenvectorSchurDeviceOpenMP(exec_instance,
+					     T, b, V, w);    
+  }  
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  int RightEigenvectorSchurDevice<Kokkos::Cuda>::invoke(
-    const Kokkos::Cuda &exec_instance,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &T,
-    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Cuda>::type> &b,
-    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
-    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &w,
-    const control_type & control) {
+  template<typename RealType>
+  int RightEigenvectorSchurDeviceCuda
+  (const Kokkos::Cuda &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &T,
+   const value_type_2d_view<int, typename UseThisDevice<Kokkos::Cuda>::type> &b,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+   const control_type & control) {
     ProfilingRegionScope region("Tines::RightEigenvectorSchurCuda");
 
     /// default
@@ -128,6 +170,28 @@ namespace Tines {
       });
     return 0;
   }
+
+  int RightEigenvectorSchurDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Cuda>::type> &b,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type & control) {
+    return RightEigenvectorSchurDeviceCuda(exec_instance,
+					   T, b, V, w, control);
+  }  
+
+  int RightEigenvectorSchurDevice<Kokkos::Cuda>::invoke(
+    const Kokkos::Cuda &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::Cuda>::type> &b,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &V,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::Cuda>::type> &w,
+    const control_type & control) {
+    return RightEigenvectorSchurDeviceCuda(exec_instance,
+					   T, b, V, w, control);
+  }  
 #endif
 
 } // namespace Tines

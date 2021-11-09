@@ -19,25 +19,19 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
+#include "Tines_TestUtils.hpp"
 
 int main(int argc, char **argv) {
   Kokkos::initialize(argc, argv);
   {
-    using real_type = double;
-    using complex_type = Kokkos::complex<double>;
-
-    using exec_space = Kokkos::DefaultExecutionSpace;
-    using device_type = Tines::UseThisDevice<exec_space>::type;
-
-    using host_exec_space = Kokkos::DefaultHostExecutionSpace;
-    using host_device_type = Tines::UseThisDevice<host_exec_space>::type;
+    printTestInfo("FileInterface");
 
     const real_type zero(0);
     Kokkos::Random_XorShift64_Pool<device_type> random(13718);
 
     /// 1D View
     {
-      const int m = 12;
+      const ordinal_type m = 12;
       Tines::value_type_1d_view<real_type, device_type> A("A", m);
 
       Kokkos::fill_random(A, random, real_type(1.0));
@@ -45,11 +39,11 @@ int main(int argc, char **argv) {
       std::string filename("test_1d_view.dat");
       Tines::writeView(filename, A);
 
-      int rank(0), extents[8], value_type_size(0);
+      ordinal_type rank(0), extents[8], value_type_size(0);
       auto in = Tines::readView(filename, rank, extents, value_type_size);
       printf("Testing 1D View File Read: \n");
       printf("  write rank 1, extent %d, value type size %d\n", m,
-             int(sizeof(real_type)));
+             ordinal_type(sizeof(real_type)));
       printf("  read  rank %d, extent %d, value type size %d\n", rank,
              extents[0], value_type_size);
 
@@ -61,7 +55,7 @@ int main(int argc, char **argv) {
         (real_type *)in.data(), extents[0]);
 
       real_type sum(0);
-      for (int i = 0, iend = A.span(); i < iend; ++i)
+      for (ordinal_type i = 0, iend = A.span(); i < iend; ++i)
         sum += Tines::ats<real_type>::abs(A(i) - B(i));
       if (sum == zero)
         printf("PASS: 1D view file io\n");
@@ -71,7 +65,7 @@ int main(int argc, char **argv) {
 
     /// 3D View
     {
-      const int m0 = 12, m1 = 20, m2 = 100;
+      const ordinal_type m0 = 12, m1 = 20, m2 = 100;
       Tines::value_type_3d_view<complex_type, device_type> A("A", m0, m1, m2);
 
       Kokkos::fill_random(A, random, real_type(1.0));
@@ -79,11 +73,11 @@ int main(int argc, char **argv) {
       std::string filename("test_3d_view.dat");
       Tines::writeView(filename, A);
 
-      int rank(0), extents[8], value_type_size(0);
+      ordinal_type rank(0), extents[8], value_type_size(0);
       auto in = Tines::readView(filename, rank, extents, value_type_size);
       printf("Testing 3D View File Read: \n");
       printf("  write rank 3, extent %d %d %d, value type size %d\n", m0, m1,
-             m2, int(sizeof(complex_type)));
+             m2, ordinal_type(sizeof(complex_type)));
       printf("  read  rank %d, extent %d %d %d, value type size %d\n", rank,
              extents[0], extents[1], extents[2], value_type_size);
 
@@ -100,7 +94,7 @@ int main(int argc, char **argv) {
       {
         const auto Aptr = A.data();
         const auto Bptr = B.data();
-        for (int i = 0, iend = A.span(); i < iend; ++i)
+        for (ordinal_type i = 0, iend = A.span(); i < iend; ++i)
           sum += Tines::ats<complex_type>::abs(Aptr[i] - Bptr[i]);
       }
       if (sum == zero)

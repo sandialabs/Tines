@@ -47,6 +47,25 @@ namespace Tines {
                    const std::complex<double> beta, std::complex<double> *y,
                    const int ys0);
 
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const float alpha, const float *A, const int as0,
+                   const int as1, const float *x, const int xs0,
+                   const float beta, float *y, const int ys0);
+
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const Kokkos::complex<float> alpha,
+                   const Kokkos::complex<float> *A, const int as0,
+                   const int as1, const Kokkos::complex<float> *x,
+                   const int xs0, const Kokkos::complex<float> beta,
+                   Kokkos::complex<float> *y, const int ys0);
+
+  int Gemv_HostTPL(const int trans_tag, const int m, const int n,
+                   const std::complex<float> alpha,
+                   const std::complex<float> *A, const int as0, const int as1,
+                   const std::complex<float> *x, const int xs0,
+                   const std::complex<float> beta, std::complex<float> *y,
+                   const int ys0);
+
   template <typename ArgTrans> struct Gemv {
     template <typename MemberType, typename ScalarType, typename AViewType,
               typename xViewType, typename yViewType>

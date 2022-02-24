@@ -75,5 +75,6 @@ Sandia National Laboratories, New Mexico, USA
 #include "Tines_TrBDF2.hpp"
 #include "Tines_TimeIntegratorTrBDF2.hpp"
 
+#include "Tines_TimeIntegratorCVODE.hpp"
 
 #endif

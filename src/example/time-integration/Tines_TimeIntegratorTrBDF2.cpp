@@ -20,27 +20,23 @@ Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #define TINES_PROBLEM_TEST_TRBDF2
 #include "Tines.hpp"
-#include "Tines_ProblemTestTrBDF2.hpp"
+#include "Tines_ProblemTestODE.hpp"
 
 #include "Tines_TestUtils.hpp"
 
 int main(int argc, char *argv[]) {
   Kokkos::initialize(argc, argv);
   {
-    printf("Time Integrator TrBDF2");
-
+    printTestInfo testScope("Time Integrator TrBDF2");
+    
     using ats = Tines::ats<real_type>;
-    using problem_type = Tines::ProblemTestTrBDF2<real_type, host_device_type>;
+    using problem_type = Tines::ProblemTestODE<real_type, host_device_type>;
 
-    using real_type_0d_view_type =
-      typename problem_type::real_type_0d_view_type;
-    using real_type_1d_view_type =
-      typename problem_type::real_type_1d_view_type;
-    using real_type_2d_view_type =
-      typename problem_type::real_type_2d_view_type;
+    using real_type_0d_view_type = typename problem_type::real_type_0d_view_type;
+    using real_type_1d_view_type = typename problem_type::real_type_1d_view_type;
+    using real_type_2d_view_type = typename problem_type::real_type_2d_view_type;
 
-    using time_integrator_type =
-      Tines::TimeIntegratorTrBDF2<real_type, host_device_type>;
+    using time_integrator_type = Tines::TimeIntegratorTrBDF2<real_type, host_device_type>;
 
     problem_type problem;
     const int m = problem.getNumberOfEquations();
@@ -56,9 +52,7 @@ int main(int argc, char *argv[]) {
     real_type_0d_view_type t("t");
     real_type_0d_view_type dt("dt");
 
-    // const real_type zero(0);
     const auto member = Tines::HostSerialTeamMember();
-
     {
 
       /// set initial condition

@@ -1,0 +1,58 @@
+/*----------------------------------------------------------------------------------
+Tines - Time Integrator, Newton and Eigen Solver -  version 1.0
+Copyright (2021) NTESS
+https://github.com/sandialabs/Tines
+
+Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS). 
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains 
+certain rights in this software.
+
+This file is part of Tines. Tines is open-source software: you can redistribute it
+and/or modify it under the terms of BSD 2-Clause License
+(https://opensource.org/licenses/BSD-2-Clause). A copy of the license is also
+provided under the main directory
+Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
+	   Oscar Diaz-Ibarra at <odiazib@sandia.gov>, or
+	   Cosmin Safta at <csafta@sandia.gov>, or
+	   Habib Najm at <hnnajm@sandia.gov>
+
+Sandia National Laboratories, New Mexico, USA
+----------------------------------------------------------------------------------*/
+#ifndef __TINES_CONFIG_H__
+#define __TINES_CONFIG_H__
+
+/// tines control
+#cmakedefine TINES_ENABLE_VERBOSE
+#cmakedefine TINES_ENABLE_DEBUG
+#cmakedefine TINES_ENABLE_NEWTON_WRMS
+#cmakedefine TINES_ENABLE_TRBDF2_WRMS
+
+/// required libraries
+#cmakedefine TINES_ENABLE_TPL_KOKKOS
+
+/// optional libraries
+#cmakedefine TINES_ENABLE_TPL_OPENBLAS
+#cmakedefine TINES_ENABLE_TPL_OPENBLAS_CBLAS_HEADER
+#cmakedefine TINES_ENABLE_TPL_LAPACKE
+#cmakedefine TINES_ENABLE_TPL_MKL
+#cmakedefine TINES_ENABLE_TPL_YAML
+#cmakedefine TINES_ENABLE_TPL_CUBLAS
+#cmakedefine TINES_ENABLE_TPL_CUSOLVER
+#cmakedefine TINES_ENABLE_TPL_CUSPARSE
+#cmakedefine TINES_ENABLE_TPL_SUNDIALS
+
+/// cblas
+#if defined(TINES_ENABLE_TPL_MKL) || defined(TINES_ENABLE_TPL_OPENBLAS)
+#define TINES_ENABLE_TPL_CBLAS_ON_HOST
+#else
+#undef TINES_ENABLE_TPL_CBLAS_ON_HOST
+#endif
+
+#if defined(TINES_ENABLE_TPL_MKL) || defined(TINES_ENABLE_TPL_LAPACKE)
+#define TINES_ENABLE_TPL_LAPACKE_ON_HOST
+#else
+#undef TINES_ENABLE_TPL_LAPACKE_ON_HOST
+#endif
+
+
+#endif

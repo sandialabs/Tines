@@ -36,7 +36,7 @@ using exec_space = Kokkos::DefaultExecutionSpace;
 using device_type = Tines::UseThisDevice<exec_space>::type;
 using memory_space = typename device_type::memory_space;
 
-using host_exec_space = Kokkos::DefaultHostExecutionSpace;
+using host_exec_space = Kokkos::Serial; //Kokkos::DefaultHostExecutionSpace;
 using host_device_type = Tines::UseThisDevice<host_exec_space>::type;
 using host_memory_space = typename host_device_type::memory_space;
 

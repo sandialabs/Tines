@@ -47,6 +47,21 @@ Sandia National Laboratories, New Mexico, USA
 #endif
 #endif
 
+/// sundials
+#if defined(TINES_ENABLE_TPL_SUNDIALS)
+#include "sundials/sundials_types.h"
+#include "sundials/sundials_context.h"  
+#include "sundials/sundials_math.h" 
+
+#include "nvector/nvector_serial.h"
+#include "sunmatrix/sunmatrix_dense.h"
+
+#include "sunlinsol/sunlinsol_dense.h" 
+
+#include "cvode/cvode.h"
+#include "cvode/cvode_direct.h"
+#endif
+
 namespace Tines {
 
   ///

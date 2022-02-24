@@ -841,6 +841,228 @@ namespace Tines {
       return x.size();
     }
   };
+
+  template<> struct ArithTraits<Sacado::Fad::DFad<double>> {
+    using value_type = Sacado::Fad::DFad<double>;
+    using magnitude_type = value_type;
+    using scalar_type = double;
+
+    static constexpr bool is_sacado = true;
+
+    // static KOKKOS_FORCEINLINE_FUNCTION bool isInf(const value_type &x) {
+    // return ::isinf(x); } static KOKKOS_FORCEINLINE_FUNCTION bool isNan(const
+    // value_type &x) { return ::isnan(x); }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type abs(const value_type &x) {
+      using std::fabs;
+      return fabs(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type
+    real(const value_type &x) {
+      return x;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type imag(const value_type) {
+      return 0.0;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type conj(const value_type &x) {
+      return x;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type pow(const value_type &x,
+                                                      const value_type y) {
+      using std::pow;
+      return pow(x, y);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sqrt(const value_type &x) {
+      using std::sqrt;
+      return sqrt(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cbrt(const value_type &x) {
+      using std::cbrt;
+      return cbrt(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type exp(const value_type &x) {
+      using std::exp;
+      return exp(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type log(const value_type &x) {
+      using std::log;
+      return log(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type log10(const value_type &x) {
+      using std::log10;
+      return log10(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sin(const value_type &x) {
+      using std::sin;
+      return sin(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cos(const value_type &x) {
+      using std::cos;
+      return cos(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type tan(const value_type &x) {
+      using std::tan;
+      return tan(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sinh(const value_type &x) {
+      using std::sinh;
+      return sinh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cosh(const value_type &x) {
+      using std::cosh;
+      return cosh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type tanh(const value_type &x) {
+      using std::tanh;
+      return tanh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type asin(const value_type &x) {
+      using std::asin;
+      return asin(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type acos(const value_type &x) {
+      using std::acos;
+      return acos(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type atan(const value_type &x) {
+      using std::atan;
+      return atan(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type epsilon() {
+      return DBL_EPSILON;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type sfmin() {
+      return DBL_MIN;
+    }
+
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x.val();
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageCapacity() {
+      return sizeof(value_type)/sizeof(scalar_type);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageDimension(const value_type &x) {
+      return x.size()+1;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoDerivativeDimension(const value_type &x) {
+      return x.size();
+    }
+  };
+
+  template<> struct ArithTraits<Sacado::Fad::DFad<float>> {
+    using value_type = Sacado::Fad::DFad<float>;
+    using magnitude_type = value_type;
+    using scalar_type = float;
+
+    static constexpr bool is_sacado = true;
+
+    // static KOKKOS_FORCEINLINE_FUNCTION bool isInf(const value_type &x) {
+    // return ::isinf(x); } static KOKKOS_FORCEINLINE_FUNCTION bool isNan(const
+    // value_type &x) { return ::isnan(x); }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type abs(const value_type &x) {
+      using std::fabs;
+      return fabs(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type
+    real(const value_type &x) {
+      return x;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type imag(const value_type) {
+      return 0.0;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type conj(const value_type &x) {
+      return x;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type pow(const value_type &x,
+                                                      const value_type y) {
+      using std::pow;
+      return pow(x, y);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sqrt(const value_type &x) {
+      using std::sqrt;
+      return sqrt(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cbrt(const value_type &x) {
+      using std::cbrt;
+      return cbrt(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type exp(const value_type &x) {
+      using std::exp;
+      return exp(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type log(const value_type &x) {
+      using std::log;
+      return log(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type log10(const value_type &x) {
+      using std::log10;
+      return log10(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sin(const value_type &x) {
+      using std::sin;
+      return sin(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cos(const value_type &x) {
+      using std::cos;
+      return cos(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type tan(const value_type &x) {
+      using std::tan;
+      return tan(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type sinh(const value_type &x) {
+      using std::sinh;
+      return sinh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type cosh(const value_type &x) {
+      using std::cosh;
+      return cosh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type tanh(const value_type &x) {
+      using std::tanh;
+      return tanh(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type asin(const value_type &x) {
+      using std::asin;
+      return asin(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type acos(const value_type &x) {
+      using std::acos;
+      return acos(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION value_type atan(const value_type &x) {
+      using std::atan;
+      return atan(x);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type epsilon() {
+      return FLT_EPSILON;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION magnitude_type sfmin() {
+      return FLT_MIN;
+    }
+
+    static KOKKOS_FORCEINLINE_FUNCTION scalar_type 
+    sacadoScalarValue(const value_type &x) {
+      return x.val();
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageCapacity() {
+      return sizeof(value_type)/sizeof(scalar_type);
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoStorageDimension(const value_type &x) {
+      return x.size()+1;
+    }
+    static KOKKOS_FORCEINLINE_FUNCTION int
+    sacadoDerivativeDimension(const value_type &x) {
+      return x.size();
+    }
+  };
+
+
   
 } // namespace Tines
 

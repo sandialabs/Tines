@@ -47,6 +47,8 @@ Sandia National Laboratories, New Mexico, USA
 
 namespace Tines {
 
+#define TINES_PRINT_VALUE_ON_HOST( prefix, val ) std::cout << prefix << " " << # val << " is " << val << std::endl; 
+  
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 #define TINES_CHECK_ERROR(err, msg)                                            \
   if (err) {                                                                   \
@@ -92,10 +94,10 @@ namespace Tines {
       std::is_same<SpT, Kokkos::Serial>::value ||
 #endif
 #if defined(KOKKOS_ENABLE_OPENMP)
-      std::is_same<SpT, Kokkos::Serial>::value ||
+      std::is_same<SpT, Kokkos::OpenMP>::value ||
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
-      std::is_same<SpT, Kokkos::Serial>::value ||
+      std::is_same<SpT, Kokkos::Cuda>::value ||
 #endif
       false);
   };

@@ -19,7 +19,7 @@ Questions? Kyungjoo Kim <kyukim@sandia.gov>, or
 Sandia National Laboratories, New Mexico, USA
 ----------------------------------------------------------------------------------*/
 #include "Tines.hpp"
-#include "Tines_ProblemTestTrBDF2.hpp"
+#include "Tines_ProblemTestODE.hpp"
 
 #include "Tines_TestUtils.hpp"
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     printTestInfo("TrBDF2");
 
     using ats = Tines::ats<real_type>;
-    using problem_type = Tines::ProblemTestTrBDF2<real_type, host_device_type>;
+    using problem_type = Tines::ProblemTestODE<real_type, host_device_type>;
 
     using real_type_1d_view_type =
       typename problem_type::real_type_1d_view_type;
@@ -37,13 +37,8 @@ int main(int argc, char *argv[]) {
       typename problem_type::real_type_2d_view_type;
 
     using trbdf2_problem_type = Tines::TrBDF2<real_type, host_device_type>;
-    using trbdf2_problem_part1_type =
-      Tines::TrBDF2_Part1<real_type, host_device_type,
-                          Tines::ProblemTestTrBDF2>;
-    using trbdf2_problem_part2_type =
-      Tines::TrBDF2_Part2<real_type, host_device_type,
-                          Tines::ProblemTestTrBDF2>;
-
+    using trbdf2_problem_part1_type = Tines::TrBDF2_Part1<real_type, host_device_type, Tines::ProblemTestODE>;
+    using trbdf2_problem_part2_type = Tines::TrBDF2_Part2<real_type, host_device_type, Tines::ProblemTestODE>;
     using newton_solver_type = Tines::NewtonSolver<real_type, host_device_type>;
     using progress_type = Tines::Progress;
     

@@ -150,7 +150,7 @@ namespace Tines {
       member.team_barrier();
 
       /// time integration
-      real_type t(t_beg), dt(dt_in);
+      real_type t(t_beg), dt(dt_in), dtIdeal(dt_in);
       for (int iter = 0; iter < max_num_time_iterations && dt != zero; ++iter) {
         {
           int converge(0);
@@ -203,16 +203,16 @@ namespace Tines {
           if (converge) {
             t += dt;
             trbdf.computeTimeStepSize(member, dt_min, dt_max, tol_time, m_ode,
-                                      fn, fnr, f, u, dt);
-            dt = ((t + dt) > t_end) ? t_end - t : dt;
+                                      fn, fnr, f, u, dtIdeal);
+            dt = ((t + dtIdeal) > t_end) ? t_end - t : dtIdeal;
             Kokkos::parallel_for(Kokkos::TeamVectorRange(member, m),
                                  [&](const int &k) { un(k) = u(k); });
 #if defined(TINES_PROBLEM_TEST_TRBDF2)
             {
               const real_type err = problem.computeError(member, t, u);
               printf(
-                "iter %6d, t %e, dt %e, u(0) %e, u(1) %e u(2) %e, err %e\n",
-                iter, t, dt, u(0), u(1), u(2), err);
+                "iter %6d, t %e, dt %e, dtIdeal %e, u(0) %e, u(1) %e u(2) %e, err %e\n",
+                iter, t, dt, dtIdeal, u(0), u(1), u(2), err);
               if (err > 1e-4) {
                 printf("FAIL time integration error is unusually high\n");
               }
@@ -239,7 +239,7 @@ namespace Tines {
                                  vals_out(k) = u(k);
                                  if (k == 0) {
                                    t_out() = t;
-                                   dt_out() = dt;
+                                   dt_out() = dtIdeal;
                                  }
                                });
         } else {

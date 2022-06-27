@@ -203,8 +203,11 @@ namespace Tines {
           if (converge) {
             t += dt;
             trbdf.computeTimeStepSize(member, dt_min, dt_max, tol_time, m_ode,
-                                      fn, fnr, f, u, dtCompute);
-            dt = ((t + dtCompute) > t_end) ? t_end - t : dtCompute;
+                                      fn, fnr, f, u, dt);
+            // store the computed value of dt
+            dtCompute = dt;
+            // time limit of dt for t and t_end
+            dt = ((t + dt) > t_end) ? t_end - t : dt;
             Kokkos::parallel_for(Kokkos::TeamVectorRange(member, m),
                                  [&](const int &k) { un(k) = u(k); });
 #if defined(TINES_PROBLEM_TEST_TRBDF2)

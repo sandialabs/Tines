@@ -209,7 +209,7 @@ namespace Tines {
             // time limit of dt for t and t_end
             dt = ((t + dt) > t_end) ? t_end - t : dt;
             // do not attempt to take a time step smaller than zero
-            dt < 0 ? 0.0 : dt;
+            dt = dt < 0 ? 0.0 : dt;
             Kokkos::parallel_for(Kokkos::TeamVectorRange(member, m),
                                  [&](const int &k) { un(k) = u(k); });
 #if defined(TINES_PROBLEM_TEST_TRBDF2)

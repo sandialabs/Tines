@@ -64,14 +64,19 @@ SET(TINES_LINK_LIBRARIES tines)
 #
 # Kokkos
 #
-IF (KOKKOS_INSTALL_PATH)
-  MESSAGE(STATUS "TINES uses Kokkos installed at ${KOKKOS_INSTALL_PATH}")
-  FIND_PACKAGE(Kokkos REQUIRED)
-  SET(TINES_INTERNAL_KOKKOS_TARGET "Kokkos::kokkos")
-  SET(TINES_ENABLE_TPL_KOKKOS ON CACHE BOOL "Enable Kokkos")
-  LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_KOKKOS_TARGET})
+IF(TARGET Kokkos::kokkos)
+  # check to see if kokkos was loaded in another project
+  message("test one 123 ")
 ELSE()
-  MESSAGE(FATAL_ERROR "-- Kokkos is required library but KOKKOS_INSTALL_PATH is not provided")
+  IF (KOKKOS_INSTALL_PATH)
+    MESSAGE(STATUS "TINES uses Kokkos installed at ${KOKKOS_INSTALL_PATH}")
+    FIND_PACKAGE(Kokkos REQUIRED)
+    SET(TINES_INTERNAL_KOKKOS_TARGET "Kokkos::kokkos")
+    SET(TINES_ENABLE_TPL_KOKKOS ON CACHE BOOL "Enable Kokkos")
+    LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_KOKKOS_TARGET})
+  ELSE()
+    MESSAGE(FATAL_ERROR "-- Kokkos is required library but KOKKOS_INSTALL_PATH is not provided")
+  ENDIF()
 ENDIF()
 
 

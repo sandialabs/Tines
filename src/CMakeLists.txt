@@ -66,7 +66,7 @@ SET(TINES_LINK_LIBRARIES tines)
 #
 IF(TARGET Kokkos::kokkos)
   # check to see if kokkos was loaded in another project
-  message("test one 123 ")
+  message("Found Kokkos::kokkos target")
 ELSE()
   IF (KOKKOS_INSTALL_PATH)
     MESSAGE(STATUS "TINES uses Kokkos installed at ${KOKKOS_INSTALL_PATH}")

@@ -86,6 +86,7 @@ INSTALL(EXPORT tines-targets
 )
 
 EXPORT(EXPORT tines-targets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/TinesConfig.cmake"
   NAMESPACE Tines::
 )
 

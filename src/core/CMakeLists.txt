@@ -85,7 +85,7 @@ INSTALL(EXPORT tines-targets
   NAMESPACE Tines::
 )
 
-INSTALL(EXPORT tines-targets
+EXPORT(EXPORT tines-targets
   NAMESPACE Tines::
 )
 

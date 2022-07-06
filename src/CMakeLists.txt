@@ -242,6 +242,10 @@ CONFIGURE_FILE (
   )
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/Tines_Config.hpp
   DESTINATION "${CMAKE_INSTALL_PREFIX}/${TINES_INSTALL_INCLUDE_PATH}")
+# add in target include for build to enable finding Tines_Config
+TARGET_INCLUDE_DIRECTORIES(tines
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 
 #

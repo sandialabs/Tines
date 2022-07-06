@@ -37,6 +37,7 @@ MESSAGE(STATUS "TINES uses CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
 #
 # Options : use TINES prefix
 #
+OPTION(TINES_ENABLE_INSTALL "Flag to enable install exports for TINES" ON)
 OPTION(TINES_ENABLE_SHARED_BUILD "Flag to enable unit examples" OFF)
 OPTION(TINES_ENABLE_EXAMPLE "Flag to enable unit examples" OFF)
 OPTION(TINES_ENABLE_TEST "Flag to enable unit tests" OFF)

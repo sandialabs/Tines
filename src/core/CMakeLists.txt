@@ -85,11 +85,6 @@ INSTALL(EXPORT tines-targets
   NAMESPACE Tines::
 )
 
-EXPORT(EXPORT tines-targets
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/TinesConfig.cmake"
-  NAMESPACE Tines::
-)
-
 CONFIGURE_PACKAGE_CONFIG_FILE(
   "cmake/TinesConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/TinesConfig.cmake"
   INSTALL_DESTINATION "${TINES_INSTALL_LIB_PATH}/cmake/Tines"

@@ -71,7 +71,7 @@ SET(TINES_LINK_LIBRARIES tines)
 #
 IF(TARGET Kokkos::kokkos)
   # check to see if kokkos was loaded in another project
-  message("Using available Kokkos::kokkos target")
+  message(STATUS "Using available Kokkos::kokkos target")
   SET(TINES_INTERNAL_KOKKOS_TARGET "Kokkos::kokkos")
   SET(TINES_ENABLE_TPL_KOKKOS ON CACHE BOOL "Enable Kokkos")
   LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_KOKKOS_TARGET})
@@ -165,7 +165,7 @@ ENDIF()
 #
 
 IF(TARGET yaml)
-  MESSAGE("Using available yaml target")
+  MESSAGE(STATUS "Using available yaml target")
   SET(TINES_ENABLE_TPL_YAML ON CACHE BOOL "Enable YAML")
   SET(TINES_INTERNAL_YAML_TARGET "yaml")
   LIST(APPEND TINES_LINK_LIBRARIES ${TINES_INTERNAL_YAML_TARGET})

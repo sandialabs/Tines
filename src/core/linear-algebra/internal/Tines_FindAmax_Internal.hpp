@@ -73,7 +73,8 @@ namespace Tines {
             *idx = Kokkos::reduction_identity<int_type>::min() == value.loc ? value.loc : 0;
             if(value.loc < 0 || value.loc > 1000){
                 std::cout << "bad value " <<  value.loc  << std::endl;
-                std::cout << "Kokkos::reduction_identity<int_type>::min()" <<  Kokkos::reduction_identity<int_type>::min()  << std::endl;
+                std::cout << "Kokkos::reduction_identity<int_type>::min() " <<  Kokkos::reduction_identity<int_type>::min()  << std::endl;
+                std::cout << "compare " <<  (Kokkos::reduction_identity<int_type>::min()  == value.loc)  << std::endl;
 
             }
         });

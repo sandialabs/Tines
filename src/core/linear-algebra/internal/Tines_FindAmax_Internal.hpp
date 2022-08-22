@@ -69,7 +69,12 @@ namespace Tines {
             }
           },
           reducer_value);
-        Kokkos::single(Kokkos::PerTeam(member), [&]() { *idx = Kokkos::reduction_identity<int_type>::min() == value.loc ? value.loc : 0; });
+        Kokkos::single(Kokkos::PerTeam(member), [&]() {
+            *idx = Kokkos::reduction_identity<int_type>::min() == value.loc ? value.loc : 0;
+            if(value.loc < 0 || value.loc > 1000){
+                std::cout << "bad value" << std::endl;
+            }
+        });
       } else {
         Kokkos::single(Kokkos::PerTeam(member), [&]() { *idx = 0; });
       }

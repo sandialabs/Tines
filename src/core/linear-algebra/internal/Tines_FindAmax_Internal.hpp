@@ -72,7 +72,7 @@ namespace Tines {
         Kokkos::single(Kokkos::PerTeam(member), [&]() {
             *idx = Kokkos::reduction_identity<int_type>::min() == value.loc ? value.loc : 0;
             if(value.loc < 0 || value.loc > 1000){
-                std::cout << "bad value" << std::endl;
+                std::cout << "bad value " <<  value.loc  << std::endl;
             }
         });
       } else {

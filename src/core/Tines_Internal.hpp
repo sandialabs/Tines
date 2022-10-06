@@ -127,6 +127,10 @@ namespace Tines {
   /// Kokkos view
   ///
   template <typename ValueType, typename DeviceType>
+  using value_type_matrix_view =
+    Kokkos::View<ValueType**, Kokkos::LayoutLeft, DeviceType>;
+  
+  template <typename ValueType, typename DeviceType>
   using value_type_0d_view =
     Kokkos::View<ValueType, Kokkos::LayoutRight, DeviceType>;
 

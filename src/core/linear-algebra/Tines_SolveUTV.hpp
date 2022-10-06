@@ -113,8 +113,12 @@ namespace Tines {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
   defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
-      if ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,
-                        Kokkos::HostSpace>::value) &&
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
+      constexpr bool active_execution_memosy_space_is_host = true;                                     
+#else                                                                                                  
+                                                                                                         constexpr bool active_execution_memosy_space_is_host = false;                                    
+#endif 
+      if (active_execution_memosy_space_is_host &&
           (U.stride(0) == 1 || U.stride(1) == 1) &&
           (T.stride(0) == 1 || T.stride(1) == 1) &&
           (V.stride(0) == 1 || V.stride(1) == 1)) {
@@ -184,24 +188,6 @@ namespace Tines {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
   defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
-      // if
-      // ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,Kokkos::HostSpace>::value)
-      // && 	  (U.stride(0) == 1 || U.stride(1) == 1) && 	  (T.stride(0) == 1 ||
-      // T.stride(1) == 1) && 	  (V.stride(0) == 1 || V.stride(1) == 1)) {
-      // 	Kokkos::single(Kokkos::PerTeam(member), [&]() {
-      // 	  if (BViewType::rank == 1) {
-      // 	    r_val = SolveUTV_HostTPL(T.extent(0), T.extent(1),
-      // matrix_rank, 				     U.data(), U.stride(0), U.stride(1), 				     T.data(), T.stride(0),
-      // T.stride(1), 				     V.data(), V.stride(0), V.stride(1), 				     p.data(), 				     X.data(),
-      // X.stride(0), 				     B.data(), B.stride(0), 				     w.data()); 	  } else if
-      // (BViewType::rank == 2) { 	    r_val = SolveUTV_HostTPL(T.extent(0),
-      // T.extent(1), matrix_rank, B.extent(1), 				     U.data(), U.stride(0),
-      // U.stride(1), 				     T.data(), T.stride(0), T.stride(1), 				     V.data(), V.stride(0),
-      // V.stride(1), 				     p.data(), 				     X.data(), X.stride(0), X.stride(1), 				     B.data(),
-      // B.stride(0), B.stride(1), 				     w.data());
-      // 	  }
-      // 	});
-      // } else {
       { r_val = device_invoke(member, matrix_rank, q, U, T, s, p, X, B, w); }
 #else
       r_val = device_invoke(member, matrix_rank, q, U, T, s, p, X, B, w);

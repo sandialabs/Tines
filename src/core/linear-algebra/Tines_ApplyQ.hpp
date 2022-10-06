@@ -69,8 +69,13 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
-      if ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,
-                        Kokkos::HostSpace>::value) &&
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
+      constexpr bool active_execution_memosy_space_is_host = true;                                     
+#else                                                                                                  
+      constexpr bool active_execution_memosy_space_is_host = false;
+
+#endif 
+      if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {
         const int m = B.extent(0), n = B.extent(1);
@@ -126,8 +131,12 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) & !defined(__CUDA_ARCH__)
-      if ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,
-                        Kokkos::HostSpace>::value) &&
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
+      constexpr bool active_execution_memosy_space_is_host = true;                                     
+#else                                                                                                  
+      constexpr bool active_execution_memosy_space_is_host = false;                                    
+#endif 
+      if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {
         const int m = B.extent(0), n = B.extent(1);
@@ -183,8 +192,12 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
-      if ((std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,
-                        Kokkos::HostSpace>::value) &&
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
+      constexpr bool active_execution_memosy_space_is_host = true;                                     
+#else                                                                                                  
+      constexpr bool active_execution_memosy_space_is_host = false;                                    
+#endif 
+      if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {
         const int m = B.extent(0), n = B.extent(1);

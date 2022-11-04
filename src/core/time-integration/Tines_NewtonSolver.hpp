@@ -162,8 +162,10 @@ namespace Tines {
 #endif
           converge = do_not_check_converge ? false : converge;
         } else {
-          printf("Error: J contains either Nan or Inf\n");
+          // the  J contains either Nan or Inf so return from the function allowing a smaller time step to be used.
+          iter_count = iter;
           converge = false;
+          return;
         }
       }
       /// record the final number of iterations

@@ -69,7 +69,7 @@ namespace Tines {
             }
           },
           reducer_value);
-        Kokkos::single(Kokkos::PerTeam(member), [&]() { *idx = value.loc; });
+        Kokkos::single(Kokkos::PerTeam(member), [&]() { *idx = Kokkos::reduction_identity<int_type>::min() == value.loc ? 0 : value.loc; });
       } else {
         Kokkos::single(Kokkos::PerTeam(member), [&]() { *idx = 0; });
       }

@@ -49,8 +49,10 @@ int TestExamplesInternal(std::string path, std::string exec) {
 }
 
 int TestViewAndPtrExamples(std::string path, std::string exec) {
-  TestExamplesInternal(path, exec+".ptr.x");
-  TestExamplesInternal(path, exec+".view.x");
+  TestExamplesInternal(path, exec+".ptr.single.x");
+  TestExamplesInternal(path, exec+".view.single.x");
+  TestExamplesInternal(path, exec+".ptr.single.x");
+  TestExamplesInternal(path, exec+".view.double.x");
   return 0;
 }
 
@@ -84,9 +86,9 @@ TEST(LinearAlgebra,SolveUTV) {
 TEST(LinearAlgebra,SolveLinearSystemUTV) {
   TestViewAndPtrExamples("linear-algebra/", "Tines_SolveLinearSystem");
 }
-TEST(LinearAlgebra,Eigendecomposition) {
-  TestViewAndPtrExamples("linear-algebra/", "Tines_Eigendecomposition");
-}
+// TEST(LinearAlgebra,Eigendecomposition) {
+//   TestViewAndPtrExamples("linear-algebra/", "Tines_Eigendecomposition");
+// }
 
 ///
 /// Sacado basic
@@ -99,16 +101,21 @@ TEST(Sacado,ToySacado) {
 /// Time integration
 ///
 TEST(TimeIntegration,NumericalJacobians) {
-  TestExamplesInternal("time-integration/", "Tines_NumericalJacobian.x");
+  TestExamplesInternal("time-integration/", "Tines_NumericalJacobian.single.x");
+  TestExamplesInternal("time-integration/", "Tines_NumericalJacobian.double.x");  
 }
 TEST(TimeIntegration,NewtonSolver) {
-  TestExamplesInternal("time-integration/", "Tines_NewtonSolver.x");
+  TestExamplesInternal("time-integration/", "Tines_NewtonSolver.single.x");
+  TestExamplesInternal("time-integration/", "Tines_NewtonSolver.double.x");  
 }
 TEST(TimeIntegration,TrBDF2) {
-  TestExamplesInternal("time-integration/", "Tines_TrBDF2.x");
+  TestExamplesInternal("time-integration/", "Tines_TrBDF2.single.x");
+  TestExamplesInternal("time-integration/", "Tines_TrBDF2.double.x");
+
 }
 TEST(TimeIntegration,AnalyticJacobians) {
-  TestExamplesInternal("time-integration/", "Tines_AnalyticJacobian.x");
+  TestExamplesInternal("time-integration/", "Tines_AnalyticJacobian.single.x");
+  TestExamplesInternal("time-integration/", "Tines_AnalyticJacobian.double.x");
 }
 
 int

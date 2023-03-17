@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   {
     printTestInfo("Solve Eigenvalue NonSymmetric Problem Device");
 
-    exec_space::print_configuration(std::cout, false);
+    exec_space().print_configuration(std::cout, false);
 
     using ats = Tines::ats<real_type>;
 

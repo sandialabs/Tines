@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   {
     printTestInfo("HessenbergDevice");
 
-    exec_space::print_configuration(std::cout, false);
+    exec_space().print_configuration(std::cout, false);
 
     using ats = Tines::ats<real_type>;
     using Trans = Tines::Trans;

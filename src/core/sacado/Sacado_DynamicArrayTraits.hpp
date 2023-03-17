@@ -41,7 +41,17 @@
 #include "Cuda/Kokkos_Cuda_Vectorization.hpp"
 #endif
 #if !defined(SACADO_DISABLE_CUDA_IN_KOKKOS)
+// We are hooking into Kokkos Core internals here
+// Need to define this macro since we include non-public headers
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 #include "Kokkos_MemoryPool.hpp"
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 #endif
 #endif
 

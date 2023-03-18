@@ -1,0 +1,12 @@
+[submodule "ext/OpenBLAS"]
+	path = ext/OpenBLAS
+	url = https://github.com/xianyi/OpenBLAS
+[submodule "ext/kokkos"]
+	path = ext/kokkos
+	url = https://github.com/kokkos/kokkos
+[submodule "ext/gtest"]
+	path = ext/gtest
+	url = https://github.com/google/googletest.git
+[submodule "ext/yaml"]
+	path = ext/yaml
+	url = https://github.com/jbeder/yaml-cpp.git

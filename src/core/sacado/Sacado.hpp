@@ -30,8 +30,14 @@
 #ifndef SACADO_HPP
 #define SACADO_HPP
 
-// Kokkos::View specialization for Sacado AD classes
-#include "Kokkos_View_Fad.hpp"
+// Top-level Sacado include file for Sacado classes that work with Kokkos.
+// Users should use this file instead of Sacado_No_Kokkos.hpp when working
+// with Kokkos.
+
+// Ensure "Sacado.hpp" and "Sacado_No_Kokkos.hpp" are not both included
+#ifdef SACADO_NO_KOKKOS_HPP
+#error "Do not include Sacado.hpp and Sacado_No_Kokkos.hpp in the same file."
+#endif
 
 // Version string
 #include "Sacado_Version.hpp"
@@ -56,9 +62,14 @@
 #include "Sacado_Fad_Exp_SFad.hpp"
 #include "Sacado_Fad_Exp_SLFad.hpp"
 #include "Sacado_Fad_Exp_ViewFad.hpp"
+#include "Sacado_Fad_Exp_Atomic.hpp"
 #endif
 #include "Sacado_Fad_DFad.hpp"
 #include "Sacado_Fad_SFad.hpp"
 #include "Sacado_Fad_SLFad.hpp"
+
+
+// Kokkos::View specialization for Sacado AD classes
+#include "Kokkos_View_Fad.hpp"
 
 #endif // SACADO_KOKKOS_HPP

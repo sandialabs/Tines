@@ -37,22 +37,6 @@
 #include "Sacado_Traits.hpp"
 #if defined(HAVE_SACADO_KOKKOSCORE)
 #include "Kokkos_Core.hpp"
-#if defined(KOKKOS_ENABLE_CUDA)
-#include "Cuda/Kokkos_Cuda_Vectorization.hpp"
-#endif
-#if !defined(SACADO_DISABLE_CUDA_IN_KOKKOS)
-// We are hooking into Kokkos Core internals here
-// Need to define this macro since we include non-public headers
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
-#endif
-#include "Kokkos_MemoryPool.hpp"
-#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
-#undef KOKKOS_IMPL_PUBLIC_INCLUDE
-#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
-#endif
-#endif
 #endif
 
 namespace Sacado {
@@ -96,7 +80,7 @@ namespace Sacado {
   }
 #endif
 
-#if defined(HAVE_SACADO_KOKKOSCORE) && !defined(SACADO_DISABLE_CUDA_IN_KOKKOS) && defined(KOKKOS_ENABLE_CUDA) && defined(__CUDACC__)
+#if defined(HAVE_SACADO_KOKKOSCORE) && defined(SACADO_KOKKOS_USE_MEMORY_POOL) && !defined(SACADO_DISABLE_CUDA_IN_KOKKOS) && defined(KOKKOS_ENABLE_CUDA) && defined(__CUDACC__)
 
   namespace Impl {
 
@@ -201,9 +185,11 @@ namespace Sacado {
     SACADO_INLINE_FUNCTION
     static T* ds_alloc(const int sz) {
 #if defined( CUDA_VERSION ) && ( 6000 <= CUDA_VERSION ) && defined(KOKKOS_ENABLE_CUDA_UVM) && !defined( __CUDA_ARCH__ )
-      T* m;
-      KOKKOS_IMPL_CUDA_SAFE_CALL( cudaMallocManaged( (void**) &m, sz*sizeof(T), cudaMemAttachGlobal ) );
+      T* m = 0;
+      if (sz > 0)
+        KOKKOS_IMPL_CUDA_SAFE_CALL( cudaMallocManaged( (void**) &m, sz*sizeof(T), cudaMemAttachGlobal ) );
 #elif defined(HAVE_SACADO_KOKKOSCORE) && defined(SACADO_KOKKOS_USE_MEMORY_POOL) && !defined(SACADO_DISABLE_CUDA_IN_KOKKOS) && defined(__CUDA_ARCH__)
+      // This code assumes all threads enter ds_alloc, even those with sz == 0
       T* m = 0;
       const int total_sz = warpReduce(sz);
       const int lane = warpLane();
@@ -226,11 +212,14 @@ namespace Sacado {
           m = static_cast<T* >(operator new(sz*sizeof(T)));
       }
 #else
-      T* m = static_cast<T* >(operator new(sz*sizeof(T)));
+      T* m = 0;
+      if (sz > 0) {
+        m = static_cast<T* >(operator new(sz*sizeof(T)));
 #if defined(HAVE_SACADO_KOKKOSCORE)
-      if (m == 0)
-        Kokkos::abort("Allocation failed.");
+        if (m == 0)
+          Kokkos::abort("Allocation failed.");
 #endif
+      }
 #endif
       return m;
     }
@@ -271,27 +260,21 @@ namespace Sacado {
     //! Get memory for new array of length \c sz
     SACADO_INLINE_FUNCTION
     static T* get(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        T* p = m;
-        for (int i=0; i<sz; ++i)
-          new (p++) T();
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      T* p = m;
+      for (int i=0; i<sz; ++i)
+        new (p++) T();
+      return m;
     }
 
     //! Get memory for new array of length \c sz and fill with zeros
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        T* p = m;
-        for (int i=0; i<sz; ++i)
-          new (p++) T(0.0);
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      T* p = m;
+      for (int i=0; i<sz; ++i)
+        new (p++) T(0.0);
+      return m;
     }
 
     /*!
@@ -300,14 +283,11 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(const T* src, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        T* p = m;
-        for (int i=0; i<sz; ++i)
-          new (p++) T(*(src++));
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      T* p = m;
+      for (int i=0; i<sz; ++i)
+        new (p++) T(*(src++));
+      return m;
     }
 
     /*!
@@ -316,16 +296,13 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* strided_get_and_fill(const T* src, int stride, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        T* p = m;
-        for (int i=0; i<sz; ++i) {
-          new (p++) T(*(src));
-          src += stride;
-        }
-        return m;
+      T* m = Impl::ds_alloc<T>(sz);
+      T* p = m;
+      for (int i=0; i<sz; ++i) {
+        new (p++) T(*(src));
+        src += stride;
       }
-      return NULL;
+      return m;
     }
 
     //! Copy array from \c src to \c dest of length \c sz
@@ -448,23 +425,17 @@ namespace Sacado {
     //! Get memory for new array of length \c sz
     SACADO_INLINE_FUNCTION
     static T* get(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      return m;
     }
 
     //! Get memory for new array of length \c sz and fill with zeros
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=threadIdx.x; i<sz; i+=blockDim.x)
-          m[i] = 0.0;
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=threadIdx.x; i<sz; i+=blockDim.x)
+        m[i] = 0.0;
+      return m;
     }
 
     /*!
@@ -473,13 +444,10 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(const T* src, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=threadIdx.x; i<sz; i+=blockDim.x)
-          m[i] = src[i];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=threadIdx.x; i<sz; i+=blockDim.x)
+        m[i] = src[i];
+      return m;
     }
 
     /*!
@@ -488,21 +456,17 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* strided_get_and_fill(const T* src, int stride, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=threadIdx.x; i<sz; i+=blockDim.x)
-          m[i] = src[i*stride];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=threadIdx.x; i<sz; i+=blockDim.x)
+        m[i] = src[i*stride];
+      return m;
     }
 
     //! Copy array from \c src to \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void copy(const T* src, T* dest, int sz) {
-      if (sz > 0)
-        for (int i=threadIdx.x; i<sz; i+=blockDim.x)
-          dest[i] = src[i];
+      for (int i=threadIdx.x; i<sz; i+=blockDim.x)
+        dest[i] = src[i];
     }
 
     //! Copy array from \c src to \c dest of length \c sz
@@ -517,9 +481,8 @@ namespace Sacado {
     //! Zero out array \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void zero(T* dest, int sz) {
-      if (sz > 0)
-        for (int i=threadIdx.x; i<sz; i+=blockDim.x)
-          dest[i] = T(0.);
+      for (int i=threadIdx.x; i<sz; i+=blockDim.x)
+        dest[i] = T(0.);
     }
 
     //! Zero out array \c dest of length \c sz
@@ -616,23 +579,17 @@ namespace Sacado {
     //! Get memory for new array of length \c sz
     SACADO_INLINE_FUNCTION
     static T* get(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      return m;
     }
 
     //! Get memory for new array of length \c sz and fill with zeros
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=0; i<sz; ++i)
-          m[i*blockDim.x] = 0.0;
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=0; i<sz; ++i)
+        m[i*blockDim.x] = 0.0;
+      return m;
     }
 
     /*!
@@ -641,13 +598,10 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(const T* src, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=0; i<sz; ++i)
-          m[i*blockDim.x] = src[i*blockDim.x];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=0; i<sz; ++i)
+        m[i*blockDim.x] = src[i*blockDim.x];
+      return m;
     }
 
     /*!
@@ -656,27 +610,23 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* strided_get_and_fill(const T* src, int stride, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_strided_alloc<T>(sz);
-        for (int i=0; i<sz; ++i)
-          m[i*blockDim.x] = src[i*stride];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_strided_alloc<T>(sz);
+      for (int i=0; i<sz; ++i)
+        m[i*blockDim.x] = src[i*stride];
+      return m;
     }
 
     //! Copy array from \c src to \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void copy(const T* src, T* dest, int sz) {
-      if (sz > 0)
-        for (int i=0; i<sz; ++i)
-          dest[i*blockDim.x] = src[i*blockDim.x];
+      for (int i=0; i<sz; ++i)
+        dest[i*blockDim.x] = src[i*blockDim.x];
     }
 
     //! Copy array from \c src to \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void strided_copy(const T* src, int src_stride,
-                                    T* dest, int dest_stride, int sz) {
+                             T* dest, int dest_stride, int sz) {
       for (int i=0; i<sz; ++i) {
         *(dest) = *(src);
         dest += dest_stride;
@@ -687,9 +637,8 @@ namespace Sacado {
     //! Zero out array \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void zero(T* dest, int sz) {
-      if (sz > 0)
-        for (int i=0; i<sz; ++i)
-          dest[i*blockDim.x] = T(0.);
+      for (int i=0; i<sz; ++i)
+        dest[i*blockDim.x] = T(0.);
     }
 
     //! Zero out array \c dest of length \c sz
@@ -720,27 +669,22 @@ namespace Sacado {
     //! Get memory for new array of length \c sz
     SACADO_INLINE_FUNCTION
     static T* get(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      return m;
     }
 
     //! Get memory for new array of length \c sz and fill with zeros
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-#ifdef __CUDACC__
-        for (int i=0; i<sz; ++i)
-          m[i] = 0.0;
+      T* m = Impl::ds_alloc<T>(sz);
+#if defined(__CUDACC__ ) || defined(__HIPCC__ )
+      for (int i=0; i<sz; ++i)
+        m[i] = 0.0;
 #else
+      if (sz > 0)
         std::memset(m,0,sz*sizeof(T));
 #endif
-        return m;
-      }
-      return NULL;
+      return m;
     }
 
     /*!
@@ -749,13 +693,10 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* get_and_fill(const T* src, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        for (int i=0; i<sz; ++i)
-          m[i] = src[i];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      for (int i=0; i<sz; ++i)
+        m[i] = src[i];
+      return m;
     }
 
     /*!
@@ -764,20 +705,17 @@ namespace Sacado {
      */
     SACADO_INLINE_FUNCTION
     static T* strided_get_and_fill(const T* src, int stride, int sz) {
-      if (sz > 0) {
-        T* m = Impl::ds_alloc<T>(sz);
-        for (int i=0; i<sz; ++i)
-          m[i] = src[i*stride];
-        return m;
-      }
-      return NULL;
+      T* m = Impl::ds_alloc<T>(sz);
+      for (int i=0; i<sz; ++i)
+        m[i] = src[i*stride];
+      return m;
     }
 
     //! Copy array from \c src to \c dest of length \c sz
     SACADO_INLINE_FUNCTION
     static void copy(const T* src, T* dest, int sz) {
       if (sz > 0 && dest != NULL && src != NULL)
-#ifdef __CUDACC__
+#if defined( __CUDACC__) || defined(__HIPCC__ )
         for (int i=0; i<sz; ++i)
           dest[i] = src[i];
 #else
@@ -800,7 +738,7 @@ namespace Sacado {
     SACADO_INLINE_FUNCTION
     static void zero(T* dest, int sz) {
       if (sz > 0 && dest != NULL)
-#ifdef __CUDACC__
+#if defined(__CUDACC__ ) || defined(__HIPCC__ )
         for (int i=0; i<sz; ++i)
           dest[i] = T(0.);
 #else

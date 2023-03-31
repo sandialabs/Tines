@@ -86,6 +86,11 @@ TEST(LinearAlgebra,SolveUTV) {
 TEST(LinearAlgebra,SolveLinearSystemUTV) {
   TestViewAndPtrExamples("linear-algebra/", "Tines_SolveLinearSystem");
 }
+
+TEST(LinearAlgebra,Eigendecomposition) {
+  TestViewAndPtrExamples("linear-algebra/", "Tines_Hessenberg");
+}
+
 // TEST(LinearAlgebra,Eigendecomposition) {
 //   TestViewAndPtrExamples("linear-algebra/", "Tines_Eigendecomposition");
 // }
@@ -93,9 +98,14 @@ TEST(LinearAlgebra,SolveLinearSystemUTV) {
 ///
 /// Sacado basic
 ///
-// TEST(Sacado,ToySacado) {
-//   TestExamplesInternal("sacado/", "Tines_ToySacado.x");
-// }
+TEST(Sacado,ToySacado) {
+  TestExamplesInternal("sacado/", "Tines_ToySacadoJacobian.x");
+  TestExamplesInternal("sacado/", "Tines_ToySacadoHessian.x");
+  TestExamplesInternal("sacado/", "Tines_ToySacadoRayleighQuotient.x");
+  TestExamplesInternal("sacado/", "Tines_ToySacadoReducer.x");
+  TestExamplesInternal("sacado/", "Tines_ToySacadoStdVector.x");
+  TestExamplesInternal("sacado/", "Tines_ToySacadoStdVector.x");
+}
 
 ///
 /// Time integration

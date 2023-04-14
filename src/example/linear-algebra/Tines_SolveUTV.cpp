@@ -33,6 +33,8 @@ int main(int argc, char **argv) {
     using Diag = Tines::Diag;
     using Direct = Tines::Direct;
 
+
+
     const int ntest = 2;
     const int ms[2] = {10, 10}, rs[2] = {10, 4};
     for (int itest = 0; itest < ntest; ++itest) {
@@ -48,8 +50,12 @@ int main(int argc, char **argv) {
       Kokkos::View<real_type **, Kokkos::LayoutRight, host_device_type> V("V",
                                                                           m, m);
       Kokkos::View<int *, Kokkos::LayoutRight, host_device_type> p("p", m);
+      
+      ordinal_type wlen=0;
+      Tines::UTV::workspace(A,wlen);
+
       Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> w("w",
-                                                                         3 * m);
+                                                                         wlen);
 
       Kokkos::View<real_type *, Kokkos::LayoutRight, host_device_type> x("x",
                                                                          m);

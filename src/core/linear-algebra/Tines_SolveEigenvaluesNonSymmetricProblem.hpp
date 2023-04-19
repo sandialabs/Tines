@@ -74,11 +74,8 @@ namespace Tines {
       static_assert(WViewType::rank == 1, "W is not rank-1 view");
 
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) && !defined(__CUDA_ARCH__)
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
-      constexpr bool active_execution_memosy_space_is_host = true;                                     
-#else                                                                                                  
-                                                                                                         constexpr bool active_execution_memosy_space_is_host = false;                                    
-#endif 
+      bool active_execution_memosy_space_is_host = true;                                    
+KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;) 
       if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) && (er.stride(0) == 1) &&
           (ei.stride(0) == 1) && (UR.stride(0) == 1 || UR.stride(1) == 1) &&

@@ -69,12 +69,9 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
-      constexpr bool active_execution_memosy_space_is_host = true;                                     
-#else                                                                                                  
-      constexpr bool active_execution_memosy_space_is_host = false;
+      bool active_execution_memosy_space_is_host = true;                                    
+KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
 
-#endif 
       if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {
@@ -131,11 +128,8 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) & !defined(__CUDA_ARCH__)
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
-      constexpr bool active_execution_memosy_space_is_host = true;                                     
-#else                                                                                                  
-      constexpr bool active_execution_memosy_space_is_host = false;                                    
-#endif 
+      bool active_execution_memosy_space_is_host = true;                                    
+KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
       if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {
@@ -192,11 +186,8 @@ namespace Tines {
 
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST)
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)                                                 
-      constexpr bool active_execution_memosy_space_is_host = true;                                     
-#else                                                                                                  
-      constexpr bool active_execution_memosy_space_is_host = false;                                    
-#endif 
+      bool active_execution_memosy_space_is_host = true;                                    
+KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
       if (active_execution_memosy_space_is_host &&
           (A.stride(0) == 1 || A.stride(1) == 1) &&
           (B.stride(0) == 1 || B.stride(1) == 1) && (t.stride(0) == 1)) {

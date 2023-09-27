@@ -29,13 +29,13 @@
 /* #define HAVE_SACADO_TEUCHOSNUMERICS */
 
 /* Define if want to build with kokkos-core enabled */
-#define HAVE_SACADO_KOKKOSCORE
-#if !defined(HAVE_SACADO_KOKKOSCORE)
+#define HAVE_SACADO_KOKKOS
+#if !defined(HAVE_SACADO_KOKKOS)
 #define KOKKOS_INLINE_FUNCTION inline
 #endif
 
 /* Define if want to build with kokkos-containers enabled */
-#define HAVE_SACADO_KOKKOSCONTAINERS
+#define HAVE_SACADO_KOKKOS
 
 /* Define if want to build with TeuchosKokkosComm subpackage enabled */
 /* #define HAVE_SACADO_TEUCHOSKOKKOSCOMM */

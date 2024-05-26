@@ -29,8 +29,8 @@
 /* #define HAVE_SACADO_TEUCHOSNUMERICS */
 
 /* Define if want to build with kokkos-core enabled */
-#define HAVE_SACADO_KOKKOSCORE
-#if !defined(HAVE_SACADO_KOKKOSCORE)
+#define HAVE_SACADO_KOKKOS
+#if !defined(HAVE_SACADO_KOKKOS)
 #define KOKKOS_INLINE_FUNCTION inline
 #endif
 

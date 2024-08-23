@@ -99,6 +99,9 @@ namespace Tines {
 #if defined(KOKKOS_ENABLE_CUDA)
       std::is_same<SpT, Kokkos::Cuda>::value ||
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+      std::is_same<SpT, Kokkos::HIP>::value ||
+#endif     
       false);
   };
 
@@ -122,6 +125,12 @@ namespace Tines {
     using type = Kokkos::Device<Kokkos::Cuda, Kokkos::CudaSpace>;
   };
 #endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+  template <> struct UseThisDevice<Kokkos::HIP> {
+    using type = Kokkos::Device<Kokkos::HIP, Kokkos::HIPSpace>;
+  };
+#endif  
 
   ///
   /// Kokkos view

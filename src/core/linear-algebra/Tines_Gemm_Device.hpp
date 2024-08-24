@@ -106,6 +106,25 @@ namespace Tines {
       const control_type & contorl = control_type());
   };
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+  template <>
+  struct GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::HIP> {
+    static int invoke(
+      const Kokkos::HIP &exec_instance, const double alpha,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &A,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &B,
+      const double beta,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &C,
+      const control_type & contorl = control_type());
+    static int invoke(
+      const Kokkos::HIP &exec_instance, const float alpha,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &A,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &B,
+      const float beta,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &C,
+      const control_type & contorl = control_type());
+  };
+#endif  
 } // namespace Tines
 
 #endif

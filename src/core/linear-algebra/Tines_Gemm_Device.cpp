@@ -208,6 +208,91 @@ namespace Tines {
 					beta, C, control);    
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+  template<typename RealType>
+  int GemmDeviceNoTransNoTransHIP
+  (const Kokkos::HIP &exec_instance, const RealType alpha,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &B,
+   const RealType beta,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &C,
+   const control_type & control) {
+    ProfilingRegionScope region("Tines::GemmCuda");
+    {
+      const int league_size = A.extent(0);
+      using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;
+      policy_type policy(exec_instance, league_size, Kokkos::AUTO);
+      
+      const auto it = control.find("IntPair:Gemm:TeamSize");
+      if (it != control.end()) {
+  const auto team = it->second.int_pair_value;
+  policy = policy_type(exec_instance, league_size, team.first, team.second);
+      } else {
+  /// let's guess....
+        const int np = A.extent(0), m = A.extent(1);
+        if (np > 100000) {
+          /// we have enough batch parallelism... use AUTO
+        } else {
+          /// batch parallelsim itself cannot occupy the whole device
+          int vector_size(0), team_size(0);
+          if (m <= 64) {
+            const int total_team_size = 256;
+            vector_size = 16;
+            team_size = total_team_size / vector_size;
+          } else if (m <= 128) {
+            const int total_team_size = 512;
+            vector_size = 16;
+            team_size = total_team_size / vector_size;
+          } else {
+            const int total_team_size = 1024;
+            vector_size = 32;
+            team_size = total_team_size / vector_size;
+          }
+          policy = policy_type(exec_instance, league_size, team_size, vector_size);
+        }
+      }
+      
+      Kokkos::parallel_for
+  ("Tines::GemmHIP::parallel_for", policy,
+   KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+    const int i = member.league_rank();
+    const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
+    const auto _B = Kokkos::subview(B, i, Kokkos::ALL(), Kokkos::ALL());
+    const auto _C = Kokkos::subview(C, i, Kokkos::ALL(), Kokkos::ALL());
+          
+    Tines::Gemm<Trans::NoTranspose, Trans::NoTranspose>
+      ::invoke(member, alpha, _A, _B, beta, _C);
+  });
+    }
+    
+    return 0;    
+  }
+  
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance, const double alpha,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &B,
+    const double beta,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &C,
+    const control_type & control) {
+    return GemmDeviceNoTransNoTransHIP(exec_instance,
+          alpha, A, B,
+          beta, C, control);    
+  }
+
+  int GemmDevice<Trans::NoTranspose, Trans::NoTranspose, Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance, const float alpha,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &B,
+    const float beta,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &C,
+    const control_type & control) {
+    return GemmDeviceNoTransNoTransHIP(exec_instance,
+          alpha, A, B,
+          beta, C, control);    
+  }
+#endif  
   
 } // namespace Tines
 

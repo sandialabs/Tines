@@ -261,7 +261,7 @@ namespace Tines {
 
       policy_type policy(np, 1);
       policy.set_scratch_size(level, Kokkos::PerTeam(per_team_scratch));
-#if !defined(__CUDA_ARCH__)
+#if !defined(__CUDA_ARCH__) & !defined(__HIP_DEVICE_COMPILE__)
       Kokkos::parallel_for
 	("Tines::Schur_HostTPL",policy,
 	 [=](const typename policy_type::member_type &member) {
@@ -419,6 +419,234 @@ namespace Tines {
     const value_type_2d_view<float, UseThisDevice<Kokkos::Cuda>::type> &w,
     const control_type &control) {
     return SolveEigenvaluesNonSymmetricProblemDeviceCuda
+      (exec_instance, A, er, ei, V, w, control);
+  }
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+  template<typename RealType>
+  int SolveEigenvaluesNonSymmetricProblemDeviceHIP
+  (const Kokkos::HIP &exec_instance,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::HIP>::type> &A,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::HIP>::type> &er,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::HIP>::type> &ei,
+   const value_type_3d_view<RealType, UseThisDevice<Kokkos::HIP>::type> &V,
+   const value_type_2d_view<RealType, UseThisDevice<Kokkos::HIP>::type> &w,
+   const control_type &control) {
+    ProfilingRegionScope region("Tines::SolveEigenvaluesNonSymmetricProblemHIP");
+    {
+      // bool use_tpl_if_avail(true);
+      // {
+      //  const auto it = control.find("Bool:UseTPL");
+      //  if (it != control.end()) use_tpl_if_avail = it->second.bool_value;
+      // }
+      bool sort_eigen_pairs(false);
+      {
+  const auto it = control.find("Bool:SolveEigenvaluesNonSymmetricProblem:Sort");
+  if (it != control.end()) sort_eigen_pairs = it->second.bool_value;
+      }
+
+      const int np = A.extent(0), m = A.extent(1);
+      using exec_space = Kokkos::HIP;
+      using host_space = Kokkos::DefaultHostExecutionSpace;
+
+      using device_type = typename UseThisDevice<exec_space>::type;
+      using host_device_type = typename UseThisDevice<host_space>::type;
+
+      RealType *wptr = w.data();
+      int wlen = w.span();
+      value_type_3d_view<RealType, device_type> Z(wptr, np, m, m);
+      wptr += Z.span(); wlen -= Z.span();
+      TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
+
+      value_type_2d_view<RealType, device_type> t(wptr, np, m);
+      wptr += t.span(); wlen -= t.span();
+      TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
+
+      value_type_2d_view<RealType, device_type> w(wptr, np, m);
+      wptr += w.span(); wlen -= w.span();
+      TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
+
+      value_type_1d_view<RealType, host_device_type>
+  mirror(do_not_init_tag("mirror_space"), 2*np*m*m + 3*np*m);
+
+      RealType * mptr = mirror.data();
+      value_type_3d_view<RealType,host_device_type> A_host(mptr, A.extent(0), A.extent(1), A.extent(2)); mptr += A_host.span();
+      value_type_3d_view<RealType,host_device_type> Z_host(mptr, Z.extent(0), Z.extent(1), Z.extent(2)); mptr += Z_host.span();
+      value_type_2d_view<RealType,host_device_type> er_host(mptr, er.extent(0), er.extent(1)); mptr += er_host.span();
+      value_type_2d_view<RealType,host_device_type> ei_host(mptr, ei.extent(0), ei.extent(1)); mptr += ei_host.span();
+
+      value_type_2d_view<int, device_type> b((int *)t.data(), np, m);
+      value_type_2d_view<int, host_device_type> b_host((int*)mptr, b.extent(0), b.extent(1)); mptr += b_host.span();
+
+      HessenbergDevice<exec_space>::invoke(exec_instance, A, Z, t, w, control);
+      Kokkos::deep_copy(exec_instance, A_host, A);
+      Kokkos::deep_copy(exec_instance, Z_host, Z);
+
+      using policy_type = Kokkos::TeamPolicy<host_space>;
+      using scratch_type = ScratchViewType<value_type_1d_view<RealType, UseThisDevice<host_space>::type>>;
+      const int level = 0, per_team_scratch = scratch_type::shmem_size(2 * m * m);
+
+      policy_type policy(np, 1);
+      policy.set_scratch_size(level, Kokkos::PerTeam(per_team_scratch));
+#if !defined(__CUDA_ARCH__) & !defined(__HIP_DEVICE_COMPILE__)
+      Kokkos::parallel_for
+  ("Tines::Schur_HostTPL",policy,
+   [=](const typename policy_type::member_type &member) {
+     const int p = member.league_rank();
+     scratch_type work(member.team_scratch(level), 2 * m * m);
+
+     RealType *__restrict__ _A = work.data();
+     RealType *__restrict__ _Z = work.data() + m * m;
+
+     /// change data column major
+     for (int i = 0; i < m; ++i)
+       for (int j = 0; j < m; ++j) {
+         _A[i + j * m] = A_host(p, i, j);
+         _Z[i + j * m] = Z_host(p, i, j);
+       }
+
+     Schur_HostTPL(m, _A, 1, m, _Z, 1, m, &er_host(p, 0), &ei_host(p, 0),
+       &b_host(p, 0), 1);
+
+     for (int i = 0; i < m; ++i)
+       for (int j = 0; j < m; ++j) {
+         A_host(p, i, j) = _A[i + j * m];
+         Z_host(p, i, j) = _Z[i + j * m];
+       }
+   });
+#else
+      TINES_CHECK_ERROR(true, "Error: HIP code is executed whereas host code is expected");
+#endif
+      Kokkos::deep_copy(exec_instance, A, A_host);
+      Kokkos::deep_copy(exec_instance, Z, Z_host);
+      Kokkos::deep_copy(exec_instance, b, b_host);
+
+      value_type_3d_view<RealType, device_type> U(wptr, np, m, m);
+      wptr += U.span();
+      wlen -= U.span();
+      TINES_CHECK_ERROR(wlen < 0, "Error: workspace is too small");
+
+      RightEigenvectorSchurDevice<exec_space>
+  ::invoke(exec_instance, A, b, U, w, control);
+
+      const RealType one(1), zero(0);
+      GemmDevice<Trans::NoTranspose, Trans::NoTranspose, exec_space>
+  ::invoke(exec_instance, one, Z, U, zero, V, control);
+
+      if (sort_eigen_pairs) {
+        value_type_2d_view<int, device_type> p((int*)t.data(), np, m);
+  {
+          using policy_type = Kokkos::TeamPolicy<host_space>;
+
+          value_type_2d_view<RealType, host_device_type> w_host(A_host.data(), np, 2*m);
+          policy_type policy(np, 1);
+          Kokkos::parallel_for
+            ("Tines::ComputeSortingIndicesHost",
+             policy, [=](const typename policy_type::member_type &member) {
+              const int i = member.league_rank();
+              const auto _er = Kokkos::subview(er_host, i, Kokkos::ALL());
+              const auto _ei = Kokkos::subview(ei_host, i, Kokkos::ALL());
+              const auto _p  = Kokkos::subview( b_host, i, Kokkos::ALL());
+              const auto _w  = Kokkos::subview( w_host, i, Kokkos::ALL());
+              const auto _e  = Kokkos::subview( w_host, i, Kokkos::pair<int,int>(0,m));
+
+              ComputeSortingIndices::invoke(member, _er, _ei, _p, _w);
+
+              Copy::invoke(member, _er, _e);
+              ApplyPermutation<Side::Right,Trans::Transpose>
+                ::invoke(member, _p, _e, _er);
+
+              Copy::invoke(member, _ei, _e);
+              ApplyPermutation<Side::Right,Trans::Transpose>
+                ::invoke(member, _p, _e, _ei);
+            });
+          Kokkos::deep_copy(exec_instance, p, b_host);
+  }
+
+  {
+    /// default
+    using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;
+    policy_type policy(exec_instance, np, Kokkos::AUTO);
+
+    /// check control
+    const auto it = control.find("IntPair:SortRightEigenPairs:TeamSize");
+    if (it != control.end()) {
+      const auto team = it->second.int_pair_value;
+      policy = policy_type(exec_instance, np, team.first, team.second);
+    } else {
+      /// let's guess....
+      if (np > 100000) {
+        /// we have enough batch parallelism... use AUTO
+      } else {
+        /// batch parallelsim itself cannot occupy the whole device
+        int vector_size(0), team_size(0);
+        if (m <= 32) {
+    const int total_team_size = 32;
+    vector_size = 32;
+    team_size = total_team_size / vector_size;
+        } else if (m <= 64) {
+    const int total_team_size = 64;
+    vector_size = 64;
+    team_size = total_team_size / vector_size;
+        } else if (m <= 128) {
+    const int total_team_size = 128;
+    vector_size = 128;
+    team_size = total_team_size / vector_size;
+        } else if (m <= 256) {
+    const int total_team_size = 256;
+    vector_size = 256;
+    team_size = total_team_size / vector_size;
+        } else {
+    const int total_team_size = 512;
+    vector_size = 512;
+    team_size = total_team_size / vector_size;
+        }
+        policy = policy_type(exec_instance, np, team_size, vector_size);
+      }
+    }
+          Kokkos::parallel_for
+            ("Tines::SortRightEigenPairsHIP::parallel_for",
+             policy,  KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+              const int i = member.league_rank();
+              const auto _V  = Kokkos::subview(V,  i, Kokkos::ALL(), Kokkos::ALL());
+              const auto _p = Kokkos::subview(p,  i, Kokkos::ALL());
+              const auto _W = Kokkos::subview(Z,  i, Kokkos::ALL(), Kokkos::ALL());
+
+              Copy ::invoke(member, _V, _W);
+              ApplyPermutation<Side::Right,Trans::Transpose>
+                ::invoke(member, _p, _W, _V);
+            });
+        }
+
+      }
+      Kokkos::deep_copy(exec_instance, er, er_host);
+      Kokkos::deep_copy(exec_instance, ei, ei_host);
+    }
+    return 0;
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::HIP>::type> &er,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::HIP>::type> &ei,
+    const value_type_3d_view<double, UseThisDevice<Kokkos::HIP>::type> &V,
+    const value_type_2d_view<double, UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceHIP
+      (exec_instance, A, er, ei, V, w, control);
+  }
+
+  int SolveEigenvaluesNonSymmetricProblemDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::HIP>::type> &er,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::HIP>::type> &ei,
+    const value_type_3d_view<float, UseThisDevice<Kokkos::HIP>::type> &V,
+    const value_type_2d_view<float, UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type &control) {
+    return SolveEigenvaluesNonSymmetricProblemDeviceHIP
       (exec_instance, A, er, ei, V, w, control);
   }
 #endif

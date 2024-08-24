@@ -214,6 +214,91 @@ namespace Tines {
 				A, Q, t, w, control);
   }  
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+  template<typename RealType>
+  int HessenbergDeviceHIP
+  (const Kokkos::HIP &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &A,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &Q,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &t,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &w,
+   const control_type & control) {
+    ProfilingRegionScope region("Tines::HessenbergHIP");
+
+    /// default
+    const int league_size = A.extent(0);
+    using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;
+    policy_type policy(exec_instance, league_size, Kokkos::AUTO);
+
+    /// check control
+    const auto it = control.find("IntPair:Hessenberg:TeamSize");
+    if (it != control.end()) {
+      /// use the provided team vector setting
+      const auto & team = it->second.int_pair_value;
+      policy = policy_type(exec_instance, league_size, team.first, team.second);
+    } else {
+      /// let's guess....
+      const int np = A.extent(0), m = A.extent(1);
+      if (np > 100000) {
+        /// we have enough batch parallelism... use AUTO
+      } else {
+        /// batch parallelsim itself cannot occupy the whole device
+        int vector_size(0), team_size(0);
+        if (m <= 256) {
+          const int total_team_size = 256;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else if (m <= 512) {
+          const int total_team_size = 512;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else {
+          const int total_team_size = 768;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        }
+        policy = policy_type(exec_instance, league_size, team_size, vector_size);
+      }
+    }
+
+    Kokkos::parallel_for(
+      "Tines::HessenbergHIP::parallel_for", policy,
+      KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+        const RealType zero(0);
+        const int i = member.league_rank();
+        const auto _A = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _Q = Kokkos::subview(Q, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _t = Kokkos::subview(t, i, Kokkos::ALL());
+        const auto _w = Kokkos::subview(w, i, Kokkos::ALL());
+        Tines::Hessenberg::invoke(member, _A, _t, _w);
+        Tines::HessenbergFormQ::invoke(member, _A, _t, _Q, _w);
+        Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _A);
+      });
+    return 0;
+  }
+
+  int HessenbergDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &Q,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &t,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type & control) {
+    return HessenbergDeviceHIP(exec_instance,
+        A, Q, t, w, control);
+  }
+
+  int HessenbergDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &A,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &Q,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &t,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type & control) {
+    return HessenbergDeviceHIP(exec_instance,
+        A, Q, t, w, control);
+  }  
+#endif
 
   
 } // namespace Tines

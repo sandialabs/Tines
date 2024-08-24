@@ -102,6 +102,24 @@ namespace Tines {
       const control_type & control = control_type());
   };
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+  template <> struct RightEigenvectorSchurDevice<Kokkos::HIP> {
+    static int invoke(
+      const Kokkos::HIP &exec_instance,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &T,
+      const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+      const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &V,
+      const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &w,
+      const control_type & control = control_type());
+    static int invoke(
+      const Kokkos::HIP &exec_instance,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &T,
+      const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+      const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &V,
+      const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &w,
+      const control_type & control = control_type());
+  };
+#endif  
 } // namespace Tines
 
 #endif

@@ -82,7 +82,7 @@ namespace Tines {
            int &matrix_rank) {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
-  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
       bool active_execution_memosy_space_is_host = true;                                    
 KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;) 
       if (active_execution_memosy_space_is_host &&
@@ -130,7 +130,7 @@ KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
            const wViewType &w, int &matrix_rank) {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
-  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
       bool active_execution_memosy_space_is_host = true;                                    
 KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
       if (active_execution_memosy_space_is_host &&

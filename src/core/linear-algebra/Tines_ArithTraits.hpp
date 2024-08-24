@@ -37,14 +37,14 @@ namespace Tines {
     static constexpr bool is_sacado = false;
 
     static KOKKOS_FORCEINLINE_FUNCTION bool isInf(const value_type &x) {
-#if defined __CUDA_ARCH__
+#if defined __CUDA_ARCH__  || defined(__HIP_DEVICE_COMPILE__) 
       return isinf(x);
 #else
       return std::isinf(x);
 #endif
     }
     static KOKKOS_FORCEINLINE_FUNCTION bool isNan(const value_type &x) {
-#if defined __CUDA_ARCH__
+#if defined __CUDA_ARCH__  || defined(__HIP_DEVICE_COMPILE__) 
       return isnan(x);
 #else
       return std::isnan(x);
@@ -283,14 +283,14 @@ namespace Tines {
     static constexpr bool is_sacado = false;
 
     static KOKKOS_FORCEINLINE_FUNCTION bool isInf(const value_type &x) {
-#if defined __CUDA_ARCH__
+#if defined __CUDA_ARCH__  || defined(__HIP_DEVICE_COMPILE__) 
       return isinf(x);
 #else
       return std::isinf(x);
 #endif
     }
     static KOKKOS_FORCEINLINE_FUNCTION bool isNan(const value_type &x) {
-#if defined __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined(__HIP_DEVICE_COMPILE__) 
       return isnan(x);
 #else
       return std::isnan(x);

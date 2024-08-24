@@ -218,7 +218,7 @@ namespace Tines {
    const RealType beta,
    const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &C,
    const control_type & control) {
-    ProfilingRegionScope region("Tines::GemmCuda");
+    ProfilingRegionScope region("Tines::GemmHIP");
     {
       const int league_size = A.extent(0);
       using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;

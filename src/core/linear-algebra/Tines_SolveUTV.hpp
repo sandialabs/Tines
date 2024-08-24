@@ -69,7 +69,7 @@ namespace Tines {
       SolveUTV_Internal::workspace(n, nrhs, wlen_internal);
 
       int wlen_tpl(0);
-#if !defined(__CUDA_ARCH__)
+#if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
       SolveUTV_WorkSpaceHostTPL(n, nrhs, wlen_tpl);
 #endif
       wlen = wlen_internal > wlen_tpl ? wlen_internal : wlen_tpl;
@@ -112,7 +112,7 @@ namespace Tines {
            const XViewType &X, const BViewType &B, const wViewType &w) {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
-  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
       bool active_execution_memosy_space_is_host = true;                                    
 KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
       if (active_execution_memosy_space_is_host &&
@@ -184,7 +184,7 @@ KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
            const wViewType &w) {
       int r_val(0);
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
-  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
       { r_val = device_invoke(member, matrix_rank, q, U, T, s, p, X, B, w); }
 #else
       r_val = device_invoke(member, matrix_rank, q, U, T, s, p, X, B, w);

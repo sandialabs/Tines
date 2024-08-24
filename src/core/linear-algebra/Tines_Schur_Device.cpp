@@ -212,4 +212,91 @@ namespace Tines {
   }  
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+  template<typename RealType>
+  int SchurDeviceHIP
+  (const Kokkos::HIP &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &H,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &Z,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &er,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &ei,
+   const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+   const control_type &control) {
+    ProfilingRegionScope region("Tines::SchurHIP");
+    /// default
+    const int league_size = H.extent(0);
+    using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;
+    policy_type policy(exec_instance, league_size, Kokkos::AUTO);
+
+    /// check control
+    const auto it = control.find("IntPair:Schur:TeamSize");
+    if (it != control.end()) {
+      const auto team = it->second.int_pair_value;
+      policy = policy_type(exec_instance, league_size, team.first, team.second);
+    } else {
+      /// let's guess....
+      const int np = H.extent(0), m = H.extent(1);
+      if (np > 100000) {
+        /// we have enough batch parallelism... use AUTO
+      } else {
+        /// batch parallelsim itself cannot occupy the whole device
+        int vector_size(0), team_size(0);
+        if (m <= 256) {
+          const int total_team_size = 256;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else if (m <= 512) {
+          const int total_team_size = 512;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else {
+          const int total_team_size = 768;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        }
+        policy = policy_type(exec_instance, league_size, team_size, vector_size);
+      }
+    }
+    Kokkos::parallel_for(
+      "Tines::SchurHIP::parallel_for", policy,
+      KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+        const int i = member.league_rank();
+        const auto _H = Kokkos::subview(H, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _Z = Kokkos::subview(Z, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _er = Kokkos::subview(er, i, Kokkos::ALL());
+        const auto _ei = Kokkos::subview(ei, i, Kokkos::ALL());
+        const auto _b = Kokkos::subview(b, i, Kokkos::ALL());
+        Tines::Schur::invoke(member, _H, _Z, _er, _ei, _b);
+        /// this is not really necessary
+        const RealType zero(0);
+        Tines::SetTriangularMatrix<Uplo::Lower>::invoke(member, 2, zero, _H);
+      });
+    return 0;
+  }
+
+  int SchurDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &H,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &Z,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &er,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &ei,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+    const control_type &control) {
+    return SchurDeviceHIP(exec_instance,
+         H, Z, er, ei, b, control);
+  }  
+
+  int SchurDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &H,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &Z,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &er,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &ei,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+    const control_type &control) {
+    return SchurDeviceHIP(exec_instance,
+         H, Z, er, ei, b, control);
+  }  
+#endif
+
 } // namespace Tines

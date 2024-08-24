@@ -57,7 +57,7 @@ namespace Tines {
       SolveUTV::workspace(A, B, wlen_solve);
       int wlen_misc = m * m + n * n + n;
       int wlen_tpl(0);
-#if !defined(__CUDA_ARCH__)
+#if !defined(__CUDA_ARCH__) & !defined(__HIP_DEVICE_COMPILE__)
       SolveLinearSystem_WorkSpaceHostTPL(m, n, nrhs, wlen_tpl);
 #endif
       const int wlen_internal = (wlen_utv + wlen_solve + wlen_misc);
@@ -233,7 +233,7 @@ namespace Tines {
       r_val = device_invoke_simple(member, A, X, B, W, matrix_rank, solve_only);
 #else
 #if defined(TINES_ENABLE_TPL_LAPACKE_ON_HOST) &&                               \
-  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__CUDA_ARCH__)
+  defined(TINES_ENABLE_TPL_CBLAS_ON_HOST) && !defined(__HIP_DEVICE_COMPILE__) && !defined(__CUDA_ARCH__)
       bool active_execution_memosy_space_is_host = true;                                    
 KOKKOS_IF_ON_DEVICE( active_execution_memosy_space_is_host = false;)
       if (active_execution_memosy_space_is_host &&

@@ -193,5 +193,86 @@ namespace Tines {
 					   T, b, V, w, control);
   }  
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+  template<typename RealType>
+  int RightEigenvectorSchurDeviceHIP
+  (const Kokkos::HIP &exec_instance,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &T,
+   const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+   const value_type_3d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &V,
+   const value_type_2d_view<RealType, typename UseThisDevice<Kokkos::HIP>::type> &w,
+   const control_type & control) {
+    ProfilingRegionScope region("Tines::RightEigenvectorSchurCuda");
+
+    /// default
+    const int league_size = T.extent(0);
+    using policy_type = Kokkos::TeamPolicy<Kokkos::HIP>;
+    policy_type policy(exec_instance, league_size, Kokkos::AUTO);
+
+    const auto it = control.find("IntPair:RightEigenvectorSchur:TeamSize");
+    if (it != control.end()) {
+      const auto team = it->second.int_pair_value;
+      policy = policy_type(exec_instance, league_size, team.first, team.second);
+    } else {
+      /// let's guess....
+      const int np = T.extent(0), m = T.extent(1);
+      if (np > 100000) {
+        /// we have enough batch parallelism... use AUTO
+      } else {
+        /// batch parallelsim itself cannot occupy the whole device
+        int vector_size(0), team_size(0);
+        if (m <= 256) {
+          const int total_team_size = 256;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else if (m <= 512) {
+          const int total_team_size = 512;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        } else {
+          const int total_team_size = 768;
+          vector_size = 16;
+          team_size = total_team_size / vector_size;
+        }
+        policy = policy_type(exec_instance, league_size, team_size, vector_size);
+      }
+    }
+
+    Kokkos::parallel_for(
+      "Tines::RightEigenvectorSchurHIP::parallel_for", policy,
+      KOKKOS_LAMBDA(const typename policy_type::member_type &member) {
+        const int i = member.league_rank();
+        const auto _T = Kokkos::subview(T, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _b = Kokkos::subview(b, i, Kokkos::ALL());
+        const auto _V = Kokkos::subview(V, i, Kokkos::ALL(), Kokkos::ALL());
+        const auto _w = Kokkos::subview(w, i, Kokkos::ALL());
+
+        Tines::RightEigenvectorSchur::invoke(member, _T, _b, _V, _w);
+      });
+    return 0;
+  }
+
+  int RightEigenvectorSchurDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+    const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &V,
+    const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type & control) {
+    return RightEigenvectorSchurDeviceCuda(exec_instance,
+             T, b, V, w, control);
+  }  
+
+  int RightEigenvectorSchurDevice<Kokkos::HIP>::invoke(
+    const Kokkos::HIP &exec_instance,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &T,
+    const value_type_2d_view<int, typename UseThisDevice<Kokkos::HIP>::type> &b,
+    const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &V,
+    const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &w,
+    const control_type & control) {
+    return RightEigenvectorSchurDeviceCuda(exec_instance,
+             T, b, V, w, control);
+  }  
+#endif
 
 } // namespace Tines

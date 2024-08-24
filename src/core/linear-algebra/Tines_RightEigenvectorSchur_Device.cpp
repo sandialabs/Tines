@@ -259,7 +259,7 @@ namespace Tines {
     const value_type_3d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &V,
     const value_type_2d_view<double, typename UseThisDevice<Kokkos::HIP>::type> &w,
     const control_type & control) {
-    return RightEigenvectorSchurDeviceCuda(exec_instance,
+    return RightEigenvectorSchurDeviceHIP(exec_instance,
              T, b, V, w, control);
   }  
 
@@ -270,7 +270,7 @@ namespace Tines {
     const value_type_3d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &V,
     const value_type_2d_view<float, typename UseThisDevice<Kokkos::HIP>::type> &w,
     const control_type & control) {
-    return RightEigenvectorSchurDeviceCuda(exec_instance,
+    return RightEigenvectorSchurDeviceHIP(exec_instance,
              T, b, V, w, control);
   }  
 #endif

@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     constexpr int FadDimUpperBound = 10;
     constexpr int m = 3;
 
-    using HpT = Kokkos::DefaultExecutionSpace;
+    using HpT = Kokkos::DefaultHostExecutionSpace;
     using FadType = Sacado::Fad::SLFad<double, FadDimUpperBound>;
 
     Kokkos::View<FadType *, Kokkos::LayoutRight, Kokkos::HostSpace> x("x", m,

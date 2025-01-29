@@ -3,8 +3,8 @@ Tines - Time Integrator, Newton and Eigen Solver -  version 1.0
 Copyright (2021) NTESS
 https://github.com/sandialabs/Tines
 
-Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS). 
-Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains 
+Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains
 certain rights in this software.
 
 This file is part of Tines. Tines is open-source software: you can redistribute it
@@ -138,12 +138,12 @@ int main(int argc, char **argv) {
         for (int j = 0; j < m; ++j) {
           tmp += B(i, j) * x(j);
         }
-        ww(i) = tmp - b(i);
+        w(i) = tmp - b(i);
       }
       for (int i = 0; i < m; ++i) {
         real_type tmp(0);
         for (int j = 0; j < m; ++j) {
-          tmp += B(j, i) * ww(j);
+          tmp += B(j, i) * w(j);
         }
         err += ats::abs(tmp) * ats::abs(tmp);
         norm += ats::abs(b(i)) * ats::abs(b(i));

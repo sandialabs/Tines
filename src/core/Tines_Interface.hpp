@@ -59,7 +59,7 @@ Sandia National Laboratories, New Mexico, USA
 #include "sunlinsol/sunlinsol_dense.h" 
 
 #include "cvode/cvode.h"
-#include "cvode/cvode_direct.h"
+//#include "cvode/cvode_direct.h"
 #endif
 
 namespace Tines {

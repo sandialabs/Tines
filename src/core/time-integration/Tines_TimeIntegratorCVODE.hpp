@@ -4,8 +4,8 @@ Tines - Time Integrator, Newton and Eigen Solver -  version 1.0
 Copyright (2021) NTESS
 https://github.com/sandialabs/Tines
 
-Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS). 
-Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains 
+Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains
 certain rights in this software.
 
 This file is part of Tines. Tines is open-source software: you can redistribute it
@@ -34,14 +34,14 @@ namespace Tines {
 #if defined(TINES_ENABLE_TPL_SUNDIALS)
     using value_type = ValueType;
     using device_type = DeviceType;
-    
+
     using scalar_type = typename ats<value_type>::scalar_type;
 
     using real_type = scalar_type;
-    static_assert(std::is_same<real_type,realtype>::value,
-                  "template real type does not match to SUNDIALS realtype");
+    static_assert(std::is_same<real_type,sunrealtype>::value,
+                  "template real type does not match to SUNDIALS sunrealtype");
     using real_type_1d_view_type = value_type_1d_view<real_type,device_type>;
-    
+
     SUNContext _context;
     void *_cvode_memory_structure;
     SUNLinearSolver _linear_solver;
@@ -58,7 +58,7 @@ namespace Tines {
     void free() {
       if (_is_created) {
 	N_VDestroy(_u); /// deallocate vector u
-	SUNMatDestroy_Dense(_A);      
+	SUNMatDestroy_Dense(_A);
 	CVodeFree(&_cvode_memory_structure); /// cvode object
 	SUNLinSolFree(_linear_solver); /// deallocate linear solver and A
 	SUNContext_Free(&_context); /// context
@@ -69,27 +69,27 @@ namespace Tines {
     void create(const int m) {
       free(); /// delete previous allocation
       _m = m;
-      
+
       int r_val(0);
-      r_val = SUNContext_Create(nullptr, &_context);
+      r_val = SUNContext_Create(SUN_COMM_NULL, &_context);
       TINES_CHECK_ERROR(r_val != 0, "SUNContext_Create fails");
-      
+
       _cvode_memory_structure = CVodeCreate(CV_BDF, _context);
       TINES_CHECK_ERROR(_cvode_memory_structure == nullptr, "CvodeCreate fails");
-      
+
       //_u = N_VMake_Serial(m, u.data(), _context);
       _u = N_VNew_Serial(m, _context);
       TINES_CHECK_ERROR((void*)_u == nullptr, "NVector constructor fails");
-      
+
       _A = SUNDenseMatrix(m, m, _context);
-      TINES_CHECK_ERROR((void*)_A == nullptr, "SUNDenseMatrix constructor fails");            
+      TINES_CHECK_ERROR((void*)_A == nullptr, "SUNDenseMatrix constructor fails");
 
       _is_created = true;
     }
-    
+
     TimeIntegratorCVODE() : _cvode_memory_structure(nullptr), _is_created(false) {}
-    //free(); 
-    virtual~TimeIntegratorCVODE() { }    
+    //free();
+    virtual~TimeIntegratorCVODE() { }
 
     ///
     /// call once per to define a problem; the problem object workspace should include matrix storage for jacobian
@@ -105,9 +105,9 @@ namespace Tines {
     /// set initial value of state vector using this get interface
     ///
     real_type_1d_view_type getStateVector() {
-      return real_type_1d_view_type(N_VGetArrayPointer_Serial(_u), _m); 
+      return real_type_1d_view_type(N_VGetArrayPointer_Serial(_u), _m);
     }
-    
+
     ///
     /// initilize with function and jacobian interface
     ///
@@ -118,8 +118,8 @@ namespace Tines {
                     const real_type atol,
                     const real_type rtol,
                     const CVRhsFn computeFunction,
-                    const CVDlsJacFn computeJacobian) {
-      
+                    const CVLsJacFn computeJacobian) {
+
       int r_val(0);
 
       r_val = CVodeInit(_cvode_memory_structure, computeFunction, t0, _u);
@@ -142,7 +142,7 @@ namespace Tines {
 
       r_val = CVodeSStolerances(_cvode_memory_structure, rtol, atol);
       TINES_CHECK_ERROR(r_val != 0, "CVodeSStolerances fails");
-            
+
       _linear_solver = SUNLinSol_Dense(_u, _A, _context);
       TINES_CHECK_ERROR((void*)_linear_solver == nullptr, "SUNLinSol_Dense constructor fails");
 
@@ -150,7 +150,7 @@ namespace Tines {
       TINES_CHECK_ERROR(r_val != 0, "CVDlsSetLinearSolver fails");
 
       r_val = CVodeSetJacFn(_cvode_memory_structure, computeJacobian);
-      TINES_CHECK_ERROR(r_val != 0, "CVDlsSetJacFn fails");      
+      TINES_CHECK_ERROR(r_val != 0, "CVDlsSetJacFn fails");
     }
 
     void setTolerance(const real_type atol, const real_type rtol) {
@@ -163,10 +163,10 @@ namespace Tines {
       const int r_val = CVodeVStolerances(_cvode_memory_structure, rtol, atol_nvector);
       TINES_CHECK_ERROR(r_val != 0, "CVodeVStolerances fails");
     }
-    
+
     ///
     /// time advance until t reaches tout
-    ///    
+    ///
     int advance(const real_type tout, real_type &t, const int max_num_iterations) {
       int r_val(0);
       if (max_num_iterations < 0) {
@@ -181,7 +181,7 @@ namespace Tines {
     }
 #endif
   };
-  
+
 } // namespace Tines
 
 #endif

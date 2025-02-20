@@ -152,13 +152,13 @@ namespace Tines {
 #include "Tines_Interface.hpp"
 
 namespace Tines {
-  static int ProblemTestODE_ComputeFunctionCVODE(realtype t,
+  static int ProblemTestODE_ComputeFunctionCVODE(sunrealtype t,
         					    N_Vector u,
         					    N_Vector f,
         					    void *user_data) {
     using host_device_type = Tines::UseThisDevice<Kokkos::Serial>::type;      
-    using problem_type = ProblemTestODE<realtype,host_device_type>;
-    using realtype_1d_view_type = value_type_1d_view<realtype, host_device_type>;
+    using problem_type = ProblemTestODE<sunrealtype,host_device_type>;
+    using realtype_1d_view_type = value_type_1d_view<sunrealtype, host_device_type>;
     
     problem_type * problem = (problem_type*)(user_data);
     TINES_CHECK_ERROR(problem == nullptr, "user data is failed to cast to problem type");
@@ -166,8 +166,8 @@ namespace Tines {
     int m = problem->getNumberOfEquations();
     const auto member = Tines::HostSerialTeamMember();
 
-    realtype * u_data = N_VGetArrayPointer_Serial(u);
-    realtype * f_data = N_VGetArrayPointer_Serial(f);
+    sunrealtype * u_data = N_VGetArrayPointer_Serial(u);
+    sunrealtype * f_data = N_VGetArrayPointer_Serial(f);
 
     realtype_1d_view_type uu(u_data, m);
     realtype_1d_view_type ff(f_data, m);
@@ -176,16 +176,16 @@ namespace Tines {
     return 0;
   }
 
-  static int ProblemTestODE_ComputeJacobianCVODE(realtype t,
+  static int ProblemTestODE_ComputeJacobianCVODE(sunrealtype t,
         					    N_Vector u,
         					    N_Vector f,
         					    SUNMatrix J,
         					    void *user_data,
         					    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
     using host_device_type = Tines::UseThisDevice<Kokkos::Serial>::type;          
-    using problem_type = ProblemTestODE<realtype,host_device_type>;
-    using realtype_1d_view_type = value_type_1d_view<realtype, host_device_type>;
-    using realtype_2d_view_type = value_type_2d_view<realtype, host_device_type>;    
+    using problem_type = ProblemTestODE<sunrealtype,host_device_type>;
+    using realtype_1d_view_type = value_type_1d_view<sunrealtype, host_device_type>;
+    using realtype_2d_view_type = value_type_2d_view<sunrealtype, host_device_type>;    
 
     problem_type * problem = (problem_type*)(user_data);;
     TINES_CHECK_ERROR(problem == nullptr, "user data is failed to cast to problem type");
@@ -193,7 +193,7 @@ namespace Tines {
     int m = problem->getNumberOfEquations();    
     const auto member = Tines::HostSerialTeamMember();
 
-    realtype * u_data = N_VGetArrayPointer_Serial(u);
+    sunrealtype * u_data = N_VGetArrayPointer_Serial(u);
 
     realtype_1d_view_type uu(u_data, m);
 
